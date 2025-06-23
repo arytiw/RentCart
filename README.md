@@ -46,13 +46,21 @@ project-root/
 ├── backend/ # Spring Boot app
 
 │ ├── src/
+
 │ ├── Dockerfile
+
 │ └── application.properties
+
 ├── frontend/ # React app
+
 │ ├── src/
+
 │ ├── public/
+
 │ └── Dockerfile
+
 ├── docker-compose.yml # Run entire stack
+
 └── README.md
 
 ---
