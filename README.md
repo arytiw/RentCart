@@ -81,21 +81,33 @@ This project is under the MIT License.
 ### To run with Docker:
 
 bash
+
 Copy
+
 Edit
+
 docker-compose up --build 
+
 ### 💻 Frontend Setup
+
 bash
+
 Copy
+
 Edit
+
 cd frontend
+
 npm install
+
 npm run dev
 
 ### 📦 Backend Setup
 
 bash
+
 cd backend
+
 ./mvnw clean install
 
 
