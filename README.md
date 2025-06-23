@@ -44,6 +44,7 @@ A full-stack web platform where users can **list personal items (books, gadgets,
 ## 📂 Project Structure
 project-root/
 ├── backend/ # Spring Boot app
+
 │ ├── src/
 │ ├── Dockerfile
 │ └── application.properties
