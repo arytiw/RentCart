@@ -36,10 +36,10 @@
         </dependency>
 
         <!-- Security (optional: remove if unused) -->
-        <dependency>
+        <!-- <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-security</artifactId>
-        </dependency>
+        </dependency> -->
 
         <!-- Testing -->
         <dependency>
