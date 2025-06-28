@@ -1,0 +1,12 @@
+services:
+  backend:
+    build: ./backend
+    ports:
+      - "8080:8080"
+    environment:
+      SPRING_DATA_MONGODB_URI: mongodb+srv://mayurkotwal75:rentcart123@rentcart.rpnqlbb.mongodb.net/rentcart?retryWrites=true&w=majority&appName=RentCart
+
+  frontend:
+    build: ./frontend
+    ports:
+      - "3000:3000"
