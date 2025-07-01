@@ -1,4 +1,4 @@
-package com.GroupProject.RentCart;
+package com.GroupProject.ItemService;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;

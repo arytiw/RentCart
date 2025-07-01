@@ -1,4 +1,4 @@
-package com.GroupProject.RentCart.Controllers;
+package com.GroupProject.ItemService.Controllers;
 
 import java.util.List;
 
@@ -9,8 +9,8 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-import com.GroupProject.RentCart.Entity.Item;
-import com.GroupProject.RentCart.Repository.ItemRepository;
+import com.GroupProject.ItemService.Entity.Item;
+import com.GroupProject.ItemService.Repository.ItemRepository;
 
 @RestController
 @RequestMapping("/items")
