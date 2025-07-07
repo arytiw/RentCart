@@ -8,5 +8,5 @@ import com.GroupProject.ItemService.Entity.Item;
 
 @Repository
 public interface ItemRepository extends MongoRepository<Item, String> {
-    // Add custom queries if needed
+   
 }
