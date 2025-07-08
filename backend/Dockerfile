@@ -1,7 +1,7 @@
 # Stage 1: Build the app
 FROM maven:3.9-eclipse-temurin-17 AS build
 WORKDIR /build
-COPY RentCart /build
+COPY ItemService /build
 WORKDIR /build
 RUN mvn clean package -DskipTests
 
