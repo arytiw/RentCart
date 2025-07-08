@@ -1,6 +1,6 @@
-package com.GroupProject.RentCart.Repository;
+package com.GroupProject.Review.Repository;
 
-import com.GroupProject.RentCart.Entity.Review;
+import com.GroupProject.Review.Entity.Review;
 import org.springframework.data.mongodb.repository.MongoRepository;
 import org.springframework.stereotype.Repository;
 
@@ -13,6 +13,6 @@ public interface ReviewRepository extends MongoRepository<Review, String> {
     
     List<Review> findByUserId(String userId);
     
-    // Optional: sort by timestamp descending
-    List<Review> findByItemIdOrderByTimestampDesc(String itemId);
+    //List<Review> findByItemIdOrderByTimestampDesc(String itemId);
 }
+

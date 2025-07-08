@@ -1,7 +1,8 @@
-package com.GroupProject.RentCart.Controller;
+package com.GroupProject.Review.Controller;
 
-import com.GroupProject.RentCart.Entity.Review;
-import com.GroupProject.RentCart.Service.ReviewService;
+
+import com.GroupProject.Review.Entity.Review;
+import com.GroupProject.Review.Service.ReviewService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
@@ -49,3 +50,4 @@ public class ReviewController {
         return "Review deleted successfully.";
     }
 }
+

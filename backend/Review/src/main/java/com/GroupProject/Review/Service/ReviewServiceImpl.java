@@ -1,7 +1,8 @@
-package com.GroupProject.RentCart.Service;
+package com.GroupProject.Review.Service;
 
-import com.GroupProject.RentCart.Entity.Review;
-import com.GroupProject.RentCart.Repository.ReviewRepository;
+
+import com.GroupProject.Review.Entity.Review;
+import com.GroupProject.Review.Repository.ReviewRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 

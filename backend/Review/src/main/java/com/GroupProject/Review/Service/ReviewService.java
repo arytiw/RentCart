@@ -1,6 +1,5 @@
-package com.GroupProject.RentCart.Service;
-
-import com.GroupProject.RentCart.Entity.Review;
+package com.GroupProject.Review.Service;
+import com.GroupProject.Review.Entity.Review;
 
 import java.util.List;
 
