@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Review API Client</title>
+</head>
+<body>
+    <h1>Review API Client</h1>
+
+    <!-- ADD REVIEW -->
+    <h3>Add Review</h3>
+    <form onsubmit="addReview(event)">
+        <input type="text" id="reviewUserId" placeholder="User ID" required>
+        <input type="text" id="reviewItemId" placeholder="Item ID" required>
+        <input type="text" id="reviewContent" placeholder="Content" required>
+        <input type="number" id="reviewRating" placeholder="Rating" required>
+        <button type="submit">Submit Review</button>
+    </form>
+
+    <!-- GET REVIEW BY ID -->
+    <h3>Get Review By ID</h3>
+    <input type="text" id="getReviewId" placeholder="Review ID">
+    <button onclick="getReviewById()">Fetch</button>
+
+    <!-- GET REVIEWS BY ITEM ID -->
+    <h3>Get Reviews By Item ID</h3>
+    <input type="text" id="getItemId" placeholder="Item ID">
+    <button onclick="getByItemId()">Fetch</button>
+
+    <!-- GET REVIEWS BY USER ID -->
+    <h3>Get Reviews By User ID</h3>
+    <input type="text" id="getUserId" placeholder="User ID">
+    <button onclick="getByUserId()">Fetch</button>
+
+    <!-- GET ALL REVIEWS -->
+    <h3>Get All Reviews</h3>
+    <button onclick="getAllReviews()">Fetch All</button>
+
+    <!-- DELETE REVIEW -->
+    <h3>Delete Review By ID</h3>
+    <input type="text" id="deleteReviewId" placeholder="Review ID">
+    <button onclick="deleteReview()">Delete</button>
+
+    <!-- OUTPUT -->
+    <h3>Response:</h3>
+    <pre id="output" style="background:#f0f0f0; padding:10px;"></pre>
+
+    <script>
+        const BASE_URL = 'http://localhost:8080/api/reviews';
+
+        async function addReview(event) {
+            event.preventDefault();
+            const review = {
+                userId: document.getElementById('reviewUserId').value,
+                itemId: document.getElementById('reviewItemId').value,
+                content: document.getElementById('reviewContent').value,
+                rating: parseInt(document.getElementById('reviewRating').value)
+            };
+            const res = await fetch(BASE_URL, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(review)
+            });
+            showOutput(await res.json());
+        }
+
+        async function getReviewById() {
+            const id = document.getElementById('getReviewId').value;
+            const res = await fetch(`${BASE_URL}/${id}`);
+            showOutput(await res.json());
+        }
+
+        async function getByItemId() {
+            const itemId = document.getElementById('getItemId').value;
+            const res = await fetch(`${BASE_URL}/item/${itemId}`);
+            showOutput(await res.json());
+        }
+
+        async function getByUserId() {
+            const userId = document.getElementById('getUserId').value;
+            const res = await fetch(`${BASE_URL}/user/${userId}`);
+            showOutput(await res.json());
+        }
+
+        async function getAllReviews() {
+            const res = await fetch(BASE_URL);
+            showOutput(await res.json());
+        }
+
+        async function deleteReview() {
+            const id = document.getElementById('deleteReviewId').value;
+            const res = await fetch(`${BASE_URL}/${id}`, {
+                method: 'DELETE'
+            });
+            showOutput(await res.text());
+        }
+
+        function showOutput(data) {
+            document.getElementById('output').innerText = 
+                typeof data === 'object' ? JSON.stringify(data, null, 2) : data;
+        }
+    </script>
+</body>
+</html>

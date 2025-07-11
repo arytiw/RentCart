@@ -5,7 +5,7 @@ import { Container, Button, Row, Col, Card, Navbar, Nav } from 'react-bootstrap'
 function Home(){
     return (
         <>
-             {/* 🧢 Navbar */}
+             {/* Navbar */}
       <Navbar bg="dark" variant="dark" expand="lg">
         <Container>
           <Navbar.Brand href="#">RentCart</Navbar.Brand>
@@ -20,7 +20,7 @@ function Home(){
         </Container>
       </Navbar>
 
-      {/* 🔝 Hero Section */}
+      {/*  Hero Section */}
       <div style={{ backgroundColor: '#FFF3E0', padding: '4rem 0' }}>
         <Container className="text-center">
           <h1 className="display-4 fw-bold" style={{ color: '#FF5722' }}>
@@ -40,7 +40,7 @@ function Home(){
         </Container>
       </div>
 
-      {/* 📦 Category Section */}
+      {/* Category Section */}
       <Container className="py-5">
         <h2 className="text-center mb-4 fw-bold" style={{ color: '#212121' }}>Top Categories</h2>
         <Row className="g-4">
