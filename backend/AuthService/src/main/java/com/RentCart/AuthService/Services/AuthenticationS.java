@@ -1,5 +1,7 @@
 package com.RentCart.AuthService.Services;
 
+import java.util.List;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -16,10 +18,20 @@ public class AuthenticationS {
 	private PasswordEncoder passwordEncoder;
 
 	public String saveUser(UserCredentials credential) {
+		
+		if (repository.findByEmailId(credential.getEmailId()).isPresent()) {
+	        return "Email is already registered!";
+	    }
+		
 		credential.setPassword(passwordEncoder.encode(credential.getPassword()));
 		repository.save(credential);
 		return "User added to the System Successfully";
 	}
+	
+	public List<UserCredentials> getAllUser() {
+	    return repository.findAll();
+	}
+
 
 	public UserCredentials getUserByUsername(String username) {
 		return repository.findByUsername(username).orElse(null);
