@@ -2,7 +2,7 @@ import { Carousel, Container } from 'react-bootstrap';
 
 function HeroBanner() {
   return (
-    <div className="bg-light">
+    <div className="bg-light py-3">
       <Container>
         <Carousel fade>
           {["/images/baner1.jpg", "/images/banner2.jpg", "/images/banner3.jpg"].map((src, idx) => (

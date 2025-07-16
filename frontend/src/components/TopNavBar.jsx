@@ -10,7 +10,7 @@ function TopNavbar() {
 
   return (
     <>
-     <Navbar bg="light" expand="lg" className="shadow-sm">
+     <Navbar bg="light" expand="lg" className="shadow-sm navbar">
         <Container>
           <Navbar.Brand href="#" className="fw-bold text-danger">RentCart</Navbar.Brand>
           <Navbar.Toggle aria-controls="basic-navbar-nav" />
