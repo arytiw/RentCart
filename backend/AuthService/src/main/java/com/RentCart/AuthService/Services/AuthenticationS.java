@@ -33,8 +33,8 @@ public class AuthenticationS {
 	}
 
 
-	public UserCredentials getUserByUsername(String username) {
-		return repository.findByUsername(username).orElse(null);
+	public UserCredentials getUserByEmailId(String emailId) {
+		return repository.findByEmailId(emailId).orElse(null);
 	}
 	
 	 // ✅ Password match using encoder

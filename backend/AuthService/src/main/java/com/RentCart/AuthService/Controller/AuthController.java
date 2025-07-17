@@ -1,4 +1,4 @@
-package com.RentCart.AuthService.Controller;
+package com.RentCart.AuthService.Controller; 
 
 import java.util.List;
 
@@ -34,7 +34,6 @@ public class AuthController {
 	@PostMapping("/register")
 	public String addNewUser(@Valid @RequestBody UserCredentials user) {
 		return service.saveUser(user);
-		
 	}
 	
 	@GetMapping("/users")
@@ -45,7 +44,7 @@ public class AuthController {
 		
 	 @PostMapping("/login")
 	 public ResponseEntity<String> login(@RequestBody UserCredentials loginUser) {
-		    UserCredentials user = service.getUserByUsername(loginUser.getUsername());
+		    UserCredentials user = service.getUserByEmailId(loginUser.getEmailId());
 		    if (user != null && passwordEncoder.matches(loginUser.getPassword(), user.getPassword())) {
 		        return ResponseEntity.ok(jwtProvider.generateToken(user.getUsername()));
 		    }
