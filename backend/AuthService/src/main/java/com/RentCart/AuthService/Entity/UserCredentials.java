@@ -7,6 +7,7 @@ import org.springframework.data.mongodb.core.mapping.Document;
 
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.Pattern;
 
 @Document(collection = "userCredentials")
 
@@ -16,24 +17,22 @@ public class UserCredentials {
 	@NotBlank(message = "Username is required")
 	private String username;
 	
-	@Email(message = "Invalid email format")
+	@Pattern(
+	        regexp = "^[A-Za-z0-9+_.-]+@[A-Za-z0-9.-]+\\.com$",
+	        message = "Email must be a valid"
+	    )
 	@NotBlank(message = "Email is required")
 	@Indexed(unique = true)
 	private String emailId;
 	@NotBlank(message = "Password is required")
 	private String password;
 	@Indexed(unique = true)
-	@NotBlank(message = "PhoneNumber is required")
 	private String phoneNumber;
 	@NotBlank(message = "firstName is required")
 	private String firstName;
-	@NotBlank(message = "lastName is required")
 	private String lastName;
-	@NotBlank(message = "gender is required")
 	private String gender;
-	@NotBlank(message = "DOB is required")
 	private String dateOfBirth;
-	@NotBlank(message = "Address is required")
 	private Address address;
 
 	public UserCredentials(String id, String username, String emailId, String password, String phoneNumber,
