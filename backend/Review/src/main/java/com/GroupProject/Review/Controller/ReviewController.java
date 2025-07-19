@@ -2,6 +2,8 @@ package com.GroupProject.Review.Controller;
 
 import java.util.List;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -21,26 +23,35 @@ import com.GroupProject.Review.Service.ReviewService;
 @CrossOrigin(origins = "*")
 public class ReviewController {
 
+    private static final Logger logger = LoggerFactory.getLogger(ReviewController.class);
+
     @Autowired
     private ReviewService reviewService;
 
     @GetMapping("/greet")
     public String home() {
-        return "Hello World";
+        logger.info("Greet endpoint hit");
+        return "Jai Shree Ram Please run hoja.";
     }
 
     @PostMapping
     public Review addReview(@RequestBody Review review) {
+        logger.info("Attempting to add review: {}", review);
         if (review == null) {
+            logger.error("Review data is null");
             throw new ResourceNotFound("Review data cannot be null.");
         }
-        return reviewService.addReview(review);
+        Review savedReview = reviewService.addReview(review);
+        logger.info("Review saved successfully with ID: {}", savedReview.getId());
+        return savedReview;
     }
 
     @GetMapping("/{id}")
     public Review getReviewById(@PathVariable String id) {
+        logger.info("Fetching review by ID: {}", id);
         Review review = reviewService.getReviewById(id);
         if (review == null) {
+            logger.warn("Review not found for ID: {}", id);
             throw new ResourceNotFound("Review with ID " + id + " not found.");
         }
         return review;
@@ -48,8 +59,10 @@ public class ReviewController {
 
     @GetMapping("/item/{itemId}")
     public List<Review> getReviewsByItemId(@PathVariable String itemId) {
+        logger.info("Fetching reviews by Item ID: {}", itemId);
         List<Review> reviews = reviewService.getReviewsByItemId(itemId);
         if (reviews == null || reviews.isEmpty()) {
+            logger.warn("No reviews found for item ID: {}", itemId);
             throw new ResourceNotFound("No reviews found for item ID " + itemId);
         }
         return reviews;
@@ -57,8 +70,10 @@ public class ReviewController {
 
     @GetMapping("/user/{userId}")
     public List<Review> getReviewsByUserId(@PathVariable String userId) {
+        logger.info("Fetching reviews by User ID: {}", userId);
         List<Review> reviews = reviewService.getReviewsByUserId(userId);
         if (reviews == null || reviews.isEmpty()) {
+            logger.warn("No reviews found for user ID: {}", userId);
             throw new ResourceNotFound("No reviews found for user ID " + userId);
         }
         return reviews;
@@ -66,8 +81,10 @@ public class ReviewController {
 
     @GetMapping
     public List<Review> getAllReviews() {
+        logger.info("Fetching all reviews");
         List<Review> reviews = reviewService.getAllReviews();
         if (reviews == null || reviews.isEmpty()) {
+            logger.warn("No reviews found");
             throw new ResourceNotFound("No reviews found.");
         }
         return reviews;
@@ -75,11 +92,14 @@ public class ReviewController {
 
     @DeleteMapping("/{id}")
     public String deleteReview(@PathVariable String id) {
+        logger.info("Deleting review with ID: {}", id);
         Review review = reviewService.getReviewById(id);
-        if (review == null) {
+            if (review == null) {
+            logger.warn("Cannot delete. Review not found for ID: {}", id);
             throw new ResourceNotFound("Cannot delete. Review with ID " + id + " not found.");
         }
         reviewService.deleteReview(id);
+        logger.info("Review with ID {} deleted successfully", id);
         return "Review deleted successfully.";
     }
 }
