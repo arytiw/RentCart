@@ -1,39 +1,17 @@
-import { Container, Row, Col } from 'react-bootstrap';
-
 function FooterSection() {
   return (
-    <footer className="bg-dark text-light py-4 mt-5">
-      <Container>
-        <Row>
-          <Col md={3}>
-            <h5>Company</h5>
-            <ul className="list-unstyled">
-              <li>About Us</li>
-              <li>Careers</li>
-              <li>Press</li>
-            </ul>
-          </Col>
-          <Col md={3}>
-            <h5>Help</h5>
-            <ul className="list-unstyled">
-              <li>Contact</li>
-              <li>FAQs</li>
-              <li>Return Policy</li>
-            </ul>
-          </Col>
-          <Col md={3}>
-            <h5>Legal</h5>
-            <ul className="list-unstyled">
-              <li>Privacy Policy</li>
-              <li>Terms of Use</li>
-            </ul>
-          </Col>
-          <Col md={3}>
-            <h5>Follow Us</h5>
-            <div>🔵 🟣 🔴 🟢</div>
-          </Col>
-        </Row>
-      </Container>
+    <footer className="bg-white border-t border-gray-200 py-8 mt-12 font-sans">
+      <div className="container mx-auto px-4 flex flex-col md:flex-row items-center justify-between gap-4">
+        <div className="flex gap-6 flex-wrap justify-center md:justify-start mb-2 md:mb-0">
+          <a href="#" className="text-gray-600 hover:text-blue-600 transition font-medium">About</a>
+          <a href="#" className="text-gray-600 hover:text-blue-600 transition font-medium">Contact</a>
+          <a href="#" className="text-gray-600 hover:text-blue-600 transition font-medium">Privacy Policy</a>
+          <a href="#" className="text-gray-600 hover:text-blue-600 transition font-medium">Terms & Conditions</a>
+        </div>
+        <div className="text-gray-400 text-sm text-center md:text-right">
+          © {new Date().getFullYear()} RentCart. All rights reserved.
+        </div>
+      </div>
     </footer>
   );
 }

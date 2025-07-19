@@ -6,7 +6,6 @@
 const REVIEW_API_BASE_URL = 'http://localhost:9090/api/reviews';
 
 class ReviewService {
-  
   /**
    * Test connection to review service
    */

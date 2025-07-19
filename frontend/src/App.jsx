@@ -1,16 +1,21 @@
-import { useState } from 'react';
-import './App.css'
-import Home from './pages/Home.jsx';
-import ReviewTest from './components/ReviewTest';
+import TopNavBar from './components/TopNavBar';
+import HeroSection from './components/HeroSection';
+import FeaturedItems from './components/FeaturedItems';
+import CategoriesSection from './components/CategoriesSection';
+import TestimonialsSection from './components/TestimonialsSection';
+import FooterSection from './components/FooterSection';
 
-import { Container, Button, Row, Col, Card, Navbar, Nav } from 'react-bootstrap';
-
-function App(){
-  return(
-    <>
-      <Home></Home>
-      <ReviewTest></ReviewTest>
-    </>
+function App() {
+  return (
+    <div className="bg-[#F5F7FA] min-h-screen font-sans">
+      <TopNavBar />
+      <HeroSection />
+      <FeaturedItems />
+      <CategoriesSection />
+      <TestimonialsSection />
+      <FooterSection />
+    </div>
   );
 }
+
 export default App;
