@@ -171,7 +171,7 @@ export default function App() {
                 <path
                   d="M12.378 1.602a.75.75 0 00-.756 0L3 6.632l9 5.25 9-5.25-8.622-5.03zM21.75 7.93l-9 5.25v9l8.628-5.032a.75.75 0 00.372-.648V7.93zM11.25 22.18v-9l-9-5.25v8.57a.75.75 0 00.372.648l8.628 5.033z" />
               </svg>
-              RentCart PVT Ltd
+              RentCart
             </h6>
             <p>
             Introducing an innovative web application that allows users to rent anything they need with ease. The platform is built with the latest technologies, ensuring a seamless and user-friendly experience.
@@ -185,22 +185,22 @@ export default function App() {
             </h6>
             <p className="mb-4">
               <a className="text-white-600 dark:text-white-200"
-              href='https://rentpal.vercel.app/?category=Party%20and%20Events'
+              href='/items?category=Party%20and%20Events'
               >Party & Events</a>
             </p>
             <p className="mb-4">
               <a className="text-white-600 dark:text-white-200"
-              href='https://rentpal.vercel.app/?category=Gaming'
+              href='/items?category=Gaming'
               >Gaming</a>
             </p>
             <p className="mb-4">
               <a className="text-white-600 dark:text-white-200"
-              href='https://rentpal.vercel.app/?category=Photography'
+              href='/items?category=Photography'
               >Photography</a>
             </p>
             <p>
               <a className="text-white-600 dark:text-white-200"
-              href='https://rentpal.vercel.app/?category=Music'
+              href='/items?category=Music'
               >Music</a>
             </p>
             
@@ -213,22 +213,22 @@ export default function App() {
             </h6>
             <p className="mb-4">
               <a className="text-white-600 dark:text-white-200"
-              href='https://rentpal.vercel.app/?category=Kitchen'
-              >Kithcen</a>
+              href='/items?category=Kitchen'
+              >Kitchen</a>
             </p>
             <p className="mb-4">
               <a className="text-white-600 dark:text-white-200"
-              href='https://rentpal.vercel.app/?category=Books'
+              href='/items?category=Books'
               >Books</a>
             </p>
             <p className="mb-4">
               <a className="text-white-600 dark:text-white-200"
-              href='https://rentpal.vercel.app/?category=Transport'
+              href='/items?category=Transport'
               >Transport</a>
             </p>
             <p>
               <a className="text-white-600 dark:text-white-200"
-              href='https://rentpal.vercel.app/?category=Fitness'
+              href='/items?category=Fitness'
               >Fitness</a>
             </p>
           </div>
@@ -239,10 +239,7 @@ export default function App() {
       {/* <!--Copyright section--> */}
       <div className="bg-black-200 p-6 text-center dark:bg-bl-700">
         <span>© 2025 Copyright:</span>
-        <a
-          className="font-semibold text-neutral-600 dark:text-neutral-400"
-          href="https://github.com/shreyashkadam/rentpal"
-        >RentCart</a>
+        <a>RentCart</a>
       </div>
     </footer>
   );

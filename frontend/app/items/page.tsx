@@ -10,6 +10,7 @@ import ClientOnly from "../components/ClientOnly";
 interface ItemsPageProps {
   searchParams: {
     category?: string;
+    query?: string;
   };
 }
 
@@ -17,17 +18,30 @@ const ItemsPage = async ({ searchParams }: ItemsPageProps) => {
   const items = await getListings();
   const currentUser = await getCurrentUser();
   
-  // Filter items by category if specified
-  const filteredItems = searchParams.category 
-    ? items.filter((item: any) => item.category === searchParams.category)
-    : items;
+  let filteredItems = items;
+
+  // Filter by category if specified
+  if (searchParams.category) {
+    filteredItems = filteredItems.filter((item: any) => item.category === searchParams.category);
+  }
+
+  // Filter by query if specified
+  if (searchParams.query) {
+    const q = searchParams.query.toLowerCase();
+    filteredItems = filteredItems.filter((item: any) =>
+      (item.title && item.title.toLowerCase().includes(q)) ||
+      (item.description && item.description.toLowerCase().includes(q)) ||
+      (item.category && item.category.toLowerCase().includes(q)) ||
+      (item.locationValue && item.locationValue.toLowerCase().includes(q))
+    );
+  }
 
   if (!filteredItems || filteredItems.length === 0) {
     return (
       <ClientOnly>
         <EmptyState 
-          title={searchParams.category ? `No items found in ${searchParams.category}` : "No items found"}
-          subtitle={searchParams.category ? "Try browsing other categories" : "Be the first to list an item!"}
+          title={searchParams.query ? `No items found for "${searchParams.query}"` : (searchParams.category ? `No items found in ${searchParams.category}` : "No items found")}
+          subtitle={searchParams.query ? "Try a different search or check your spelling." : (searchParams.category ? "Try browsing other categories" : "Be the first to list an item!")}
           showReset 
         />
       </ClientOnly>

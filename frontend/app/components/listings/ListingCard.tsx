@@ -108,6 +108,10 @@ const ListingCard: React.FC<ListingCardProps> = ({
           >
             <HeartButton listingId={data.id} currentUser={currentUser} />
           </div>
+          {/* Type badge */}
+          <div className="absolute top-3 left-3">
+            <span className={`px-2 py-1 rounded text-xs font-bold ${data.type === 'SELL' ? 'bg-green-500 text-white' : 'bg-blue-500 text-white'}`}>{data.type === 'SELL' ? 'Sell' : 'Rent'}</span>
+          </div>
         </div>
         <div className="font-semibold text-lg">{data.title}</div>
         <div className="font-light text-neutral-500">

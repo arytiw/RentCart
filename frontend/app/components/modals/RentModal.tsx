@@ -57,6 +57,7 @@ const RentModal = () => {
       description: "",
       securityDeposit: 0,
       usagePolicy: "",
+      type: "RENT"
     },
   });
 
@@ -64,6 +65,7 @@ const RentModal = () => {
   const category = watch("category");
   const itemCount = watch("itemCount");
   const imageSrc = watch("imageSrc");
+  const type = watch("type");
 
   const Map = useMemo(
     () =>
@@ -121,7 +123,7 @@ const RentModal = () => {
       features: features,
       usagePolicy: data.usagePolicy || "",
       securityDeposit: data.securityDeposit || 0,
-      type: "RENT"
+      type: data.type || "RENT"
     };
 
     console.log("Sending item data:", itemData);
@@ -178,6 +180,28 @@ const RentModal = () => {
 
   let bodyContent = (
     <div className="flex flex-col gap-8">
+      {/* Type selection */}
+      <div className="flex flex-row gap-4 items-center">
+        <label className="font-medium">Type:</label>
+        <label className="flex items-center gap-1">
+          <input
+            type="radio"
+            value="RENT"
+            checked={type === "RENT"}
+            onChange={() => setValue("type", "RENT", { shouldDirty: true })}
+          />
+          Rent
+        </label>
+        <label className="flex items-center gap-1">
+          <input
+            type="radio"
+            value="SELL"
+            checked={type === "SELL"}
+            onChange={() => setValue("type", "SELL", { shouldDirty: true })}
+          />
+          Sell
+        </label>
+      </div>
       {description == "" ? (
         <Heading
           title="Which of these best describes your item?"
