@@ -13,6 +13,7 @@ import Modal from "./Modal";
 import Input from "../inputs/Input";
 import Heading from "../Heading";
 import Button from "../Button";
+import Script from "next/script";
 
 interface BookingModalProps {
   itemId: string;
@@ -48,7 +49,6 @@ const BookingModal: React.FC<BookingModalProps> = ({
 
   const onSubmit: SubmitHandler<FieldValues> = async (data) => {
     if (paymentStep === 'details') {
-      // Move to payment step
       setPaymentStep('payment');
       return;
     }
@@ -57,7 +57,6 @@ const BookingModal: React.FC<BookingModalProps> = ({
 
     try {
       const authToken = token || localStorage.getItem('authToken');
-
       if (!authToken) {
         toast.error("Please login to book this item");
         setIsLoading(false);
@@ -72,32 +71,32 @@ const BookingModal: React.FC<BookingModalProps> = ({
         paymentMode: data.paymentMode,
       };
 
-      console.log('Creating order:', orderRequest);
-
-      // Initiate order with Razorpay
+      // Initiate order with backend to get Razorpay order details
       const orderResponse = await axios.post('/api/orders', orderRequest, {
         headers: {
           'Authorization': `Bearer ${authToken}`
         }
       });
 
-      console.log('Order initiated:', orderResponse.data);
-
-      // Handle Razorpay payment
       if (orderResponse.data.razorpay) {
-        console.log('Razorpay order data:', orderResponse.data.razorpay);
-        
+        const razorpayOrder = orderResponse.data.razorpay;
+        const razorpayKey = process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID;
+        if (!razorpayKey) {
+          toast.error("Razorpay key is not set in environment. Please contact support.");
+          setIsLoading(false);
+          return;
+        }
+        const userName = (typeof window !== 'undefined' && localStorage.getItem('userName')) || "User";
+        const userEmail = (typeof window !== 'undefined' && localStorage.getItem('userEmail')) || "user@example.com";
         const options = {
-          key: "rzp_test_sIJfB86OPmS019", // Razorpay test key
-          amount: orderResponse.data.razorpay.amount,
-          currency: orderResponse.data.razorpay.currency,
+          key: razorpayKey,
+          amount: Number(razorpayOrder.amount),
+          currency: razorpayOrder.currency,
           name: "RentCart",
           description: `Booking for ${itemTitle}`,
-          order_id: orderResponse.data.razorpay.id,
+          order_id: razorpayOrder.id,
           handler: async function (response: any) {
             try {
-              console.log('Payment successful:', response);
-              
               // Confirm order after successful payment with payment verification
               const confirmData = {
                 orderRequest: orderRequest,
@@ -105,31 +104,26 @@ const BookingModal: React.FC<BookingModalProps> = ({
                 razorpayPaymentId: response.razorpay_payment_id,
                 razorpaySignature: response.razorpay_signature
               };
-              
               const confirmResponse = await axios.post('/api/orders/confirm', confirmData, {
                 headers: {
                   'Authorization': `Bearer ${authToken}`
                 }
               });
-
-              console.log('Order confirmed:', confirmResponse.data);
               toast.success("Booking successful! Your order has been confirmed.");
               router.refresh();
               reset();
               setPaymentStep('details');
               bookingModal.onClose();
             } catch (error) {
-              console.error('Error confirming order:', error);
               toast.error("Payment successful but order confirmation failed. Please contact support.");
             }
           },
           prefill: {
-            name: "User Name", // You can get this from user context
-            email: "user@example.com", // You can get this from user context
+            name: userName,
+            email: userEmail,
           },
           modal: {
             ondismiss: function() {
-              console.log('Payment modal dismissed');
               toast.info("Payment cancelled. You can try again.");
             }
           },
@@ -137,17 +131,23 @@ const BookingModal: React.FC<BookingModalProps> = ({
             color: "#F43F5E",
           },
         };
-
-        const rzp = new (window as any).Razorpay(options);
-        rzp.open();
+        // Debug log for Razorpay options
+        console.log("Razorpay options:", options);
+        try {
+          if (typeof window !== "undefined" && (window as any).Razorpay) {
+            const rzp = new (window as any).Razorpay(options);
+            rzp.open();
+          } else {
+            toast.error("Razorpay SDK not loaded. Please try again.");
+          }
+        } catch (err) {
+          console.error("Error opening Razorpay modal:", err);
+          toast.error("Payment failed to start. Please try again.");
+        }
       } else {
-        console.error('No Razorpay data in response:', orderResponse.data);
         toast.error("Payment initialization failed. Please try again.");
       }
-
     } catch (error: any) {
-      console.error('Error creating booking:', error);
-      
       if (error.response?.data?.error) {
         toast.error(error.response.data.error);
       } else {
@@ -264,17 +264,20 @@ const BookingModal: React.FC<BookingModalProps> = ({
   }
 
   return (
-    <Modal
-      disabled={isLoading}
-      isOpen={bookingModal.isOpen}
-      title="Book Item"
-      actionLabel={actionLabel}
-      onSubmit={handleSubmit(onSubmit)}
-      secondaryActionLabel={secondaryActionLabel}
-      secondaryAction={onSecondaryAction}
-      onClose={bookingModal.onClose}
-      body={bodyContent}
-    />
+    <>
+      {/* Razorpay script is loaded globally in layout.tsx */}
+      <Modal
+        disabled={isLoading}
+        isOpen={bookingModal.isOpen}
+        title="Book Item"
+        actionLabel={actionLabel}
+        onSubmit={handleSubmit(onSubmit)}
+        secondaryActionLabel={secondaryActionLabel}
+        secondaryAction={onSecondaryAction}
+        onClose={bookingModal.onClose}
+        body={bodyContent}
+      />
+    </>
   );
 };
 
