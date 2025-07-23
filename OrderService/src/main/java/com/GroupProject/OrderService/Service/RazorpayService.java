@@ -24,6 +24,8 @@ public class RazorpayService {
     public Map<String, Object> createRazorpayOrder(RazorpayRequestDTO request) {
         try {
             logger.info("Creating Razorpay order with amount: {} {}", request.getAmount(), request.getCurrency());
+            // Debug log for keys
+            logger.info("Using Razorpay key: '{}', secret: '{}...' (masked)", razorpayKey, razorpaySecret != null ? razorpaySecret.substring(0, 4) : null);
             
             // Validate request
             if (request.getAmount() == null || request.getAmount() <= 0) {
@@ -33,81 +35,42 @@ public class RazorpayService {
             if (request.getCurrency() == null || request.getCurrency().isEmpty()) {
                 throw new RuntimeException("Currency cannot be null or empty");
             }
-            
-            // For testing purposes, create a mock response
-            // In production, uncomment the real Razorpay integration below
-            logger.info("Using mock Razorpay response for testing");
-            
-            Map<String, Object> response = new HashMap<>();
-            int amountInPaise = (int) (request.getAmount() * 100);
-            response.put("id", "order_test_" + System.currentTimeMillis());
-            response.put("amount", String.valueOf(amountInPaise));
-            response.put("currency", request.getCurrency());
-            response.put("receipt", request.getReceipt());
-            
-            logger.info("Mock Razorpay order created successfully");
-            return response;
-            
-            /* 
-            // REAL RAZORPAY INTEGRATION (uncomment for production)
-            
-            // Validate Razorpay credentials
+
+            // REAL RAZORPAY INTEGRATION (uncommented for production)
             if (razorpayKey == null || razorpayKey.isEmpty()) {
                 throw new RuntimeException("Razorpay key is not configured");
             }
-            
             if (razorpaySecret == null || razorpaySecret.isEmpty()) {
                 throw new RuntimeException("Razorpay secret is not configured");
             }
-            
             logger.info("Initializing Razorpay client...");
-            
-            RazorpayClient client = new RazorpayClient(razorpayKey, razorpaySecret);
-
-            JSONObject options = new JSONObject();
-            // Convert amount to paise (multiply by 100)
+            com.razorpay.RazorpayClient client = new com.razorpay.RazorpayClient(razorpayKey, razorpaySecret);
+            org.json.JSONObject options = new org.json.JSONObject();
             int amountInPaise = (int) (request.getAmount() * 100);
             options.put("amount", amountInPaise);
             options.put("currency", request.getCurrency());
             options.put("receipt", request.getReceipt());
             options.put("payment_capture", request.getPayment_capture() ? 1 : 0);
-
             logger.debug("Razorpay options: {}", options.toString());
-
-            Order order = client.orders.create(options);
+            com.razorpay.Order order = client.orders.create(options);
             logger.info("Razorpay order created, processing response...");
-
-            // Convert the order to a simple map
             Map<String, Object> response = new HashMap<>();
+            response.put("id", order.get("id"));
+            response.put("amount", order.get("amount")); // This is a number
+            response.put("currency", order.get("currency"));
+            response.put("receipt", order.get("receipt"));
+            logger.info("Razorpay order created successfully");
+            return response;
             
-            try {
-                // Try to get the order as JSON string first
-                String orderJson = order.toString();
-                logger.debug("Order response as string: {}", orderJson);
-                
-                // Extract basic fields
-                response.put("id", order.get("id"));
-                response.put("amount", order.get("amount"));
-                response.put("currency", order.get("currency"));
-                response.put("receipt", order.get("receipt"));
-                
-                logger.info("Razorpay order created successfully");
-                return response;
-                
-            } catch (Exception parseException) {
-                logger.error("Error parsing Razorpay response: {}", parseException.getMessage());
-                
-                // Fallback: create a mock response for testing
-                response.put("id", "order_test_" + System.currentTimeMillis());
-                response.put("amount", String.valueOf(amountInPaise));
-                response.put("currency", request.getCurrency());
-                response.put("receipt", request.getReceipt());
-                
-                logger.warn("Using fallback response due to parsing error");
-                return response;
-            }
-            */
-
+            // MOCK RESPONSE (for reference only, now disabled)
+            // Map<String, Object> response = new HashMap<>();
+            // int amountInPaise = (int) (request.getAmount() * 100);
+            // response.put("id", "order_test_" + System.currentTimeMillis());
+            // response.put("amount", String.valueOf(amountInPaise));
+            // response.put("currency", request.getCurrency());
+            // response.put("receipt", request.getReceipt());
+            // logger.info("Mock Razorpay order created successfully");
+            // return response;
         } catch (Exception e) {
             logger.error("Failed to create Razorpay order: {}", e.getMessage(), e);
             throw new RuntimeException("Failed to create Razorpay order: " + e.getMessage(), e);
