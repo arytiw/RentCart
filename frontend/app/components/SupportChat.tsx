@@ -11,7 +11,7 @@ export default function SupportChat() {
     if (!input.trim()) return;
     setMessages([...messages, {from: "user", text: input}]);
     setLoading(true);
-    const res = await fetch("http://localhost:8080/api/support/chat", {
+    const res = await fetch("http://localhost:9093/api/support/chat", {
       method: "POST",
       headers: {"Content-Type": "application/json"},
       body: JSON.stringify({message: input}),
