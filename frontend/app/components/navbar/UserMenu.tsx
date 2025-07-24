@@ -14,6 +14,7 @@ import { useUser } from '@/app/providers/UserProvider';
 
 import MenuItem from "./MenuItem";
 import Avatar from "../Avatar";
+import ChangePasswordModal from '../modals/ChangePasswordModal';
 
 interface UserMenuProps {
   currentUser?: SafeUser | null;
@@ -26,6 +27,7 @@ const UserMenu: React.FC = () => {
   const rentModal = useRentModal();
   const { user, logout } = useUser();
   const [isOpen, setIsOpen] = useState(false);
+  const [showChangePassword, setShowChangePassword] = useState(false);
 
   const toggleOpen = useCallback(() => {
     setIsOpen((value) => !value);
@@ -130,6 +132,7 @@ const UserMenu: React.FC = () => {
                   onClick={() => router.push("/properties")}
                 />
                 <MenuItem label="Rent your stuff" onClick={rentModal.onOpen} />
+                <MenuItem label="Change Password" onClick={() => setShowChangePassword(true)} />
                 <hr />
                 <MenuItem label="Logout" onClick={logout} />
               </>
@@ -142,6 +145,11 @@ const UserMenu: React.FC = () => {
           </div>
         </div>
       )}
+      <ChangePasswordModal
+        isOpen={showChangePassword}
+        onClose={() => setShowChangePassword(false)}
+        email={user?.emailId || ''}
+      />
     </div>
   );
 };

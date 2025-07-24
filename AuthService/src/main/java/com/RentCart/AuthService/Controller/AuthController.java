@@ -22,6 +22,7 @@ import org.springframework.web.bind.annotation.RestController;
 import com.RentCart.AuthService.Config.JWTProvider;
 import com.RentCart.AuthService.Entity.UserCredentials;
 import com.RentCart.AuthService.Services.AuthenticationS;
+import com.RentCart.AuthService.Services.PasswordResetService;
 
 import jakarta.validation.Valid;
 
@@ -41,6 +42,9 @@ public class AuthController {
 
     @Autowired
     private PasswordEncoder passwordEncoder;
+
+    @Autowired
+    private PasswordResetService passwordResetService;
 
     @PostMapping("/register")
     public ResponseEntity<?> addNewUser(@Valid @RequestBody UserCredentials user) {
@@ -118,5 +122,49 @@ public class AuthController {
         
         logger.warn("Token validation failed");
         return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Invalid or expired token");
+    }
+
+    @PostMapping("/forgot-password")
+    public ResponseEntity<?> forgotPassword(@RequestBody Map<String, String> request) {
+        String email = request.get("email");
+        // Check if user exists before sending reset link
+        if (service.getUserByEmailId(email) == null) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Email ID is not registered.");
+        }
+        passwordResetService.createAndSendResetToken(email);
+        return ResponseEntity.ok("Password reset link sent to your email if it exists in our system.");
+    }
+
+    @PostMapping("/reset-password")
+    public ResponseEntity<?> resetPassword(@RequestBody Map<String, String> request) {
+        String token = request.get("token");
+        String newPassword = request.get("newPassword");
+        String confirmPassword = request.get("confirmPassword");
+        if (!newPassword.equals(confirmPassword)) {
+            return ResponseEntity.badRequest().body("Passwords do not match.");
+        }
+        boolean result = passwordResetService.resetPassword(token, newPassword);
+        if (result) {
+            return ResponseEntity.ok("Password reset successful.");
+        } else {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Invalid or expired token.");
+        }
+    }
+
+    @PostMapping("/change-password")
+    public ResponseEntity<?> changePassword(@RequestBody Map<String, String> request) {
+        String email = request.get("email");
+        String oldPassword = request.get("oldPassword");
+        String newPassword = request.get("newPassword");
+        String confirmPassword = request.get("confirmPassword");
+        if (!newPassword.equals(confirmPassword)) {
+            return ResponseEntity.badRequest().body("Passwords do not match.");
+        }
+        boolean result = passwordResetService.changePassword(email, oldPassword, newPassword);
+        if (result) {
+            return ResponseEntity.ok("Password changed successfully.");
+        } else {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Invalid old password or user not found.");
+        }
     }
 }

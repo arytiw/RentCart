@@ -1,0 +1,5 @@
+com\GroupProject\ItemService\Controllers\ItemController.class
+com\GroupProject\ItemService\Entity\Item.class
+com\GroupProject\ItemService\Repository\ItemRepository.class
+com\GroupProject\ItemService\Entity\ItemType.class
+com\GroupProject\ItemService\RentCartApplication.class

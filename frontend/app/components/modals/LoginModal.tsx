@@ -16,6 +16,7 @@ import { useRouter } from "next/navigation";
 import useRegisterModal from "@/app/hooks/useRegisterModal";
 import useLoginModal from "@/app/hooks/useLoginModal";
 import { useUser } from '@/app/providers/UserProvider';
+import ForgotPasswordModal from './ForgotPasswordModal';
 
 import Modal from "./Modal";
 import Input from "../inputs/Input";
@@ -28,6 +29,7 @@ const LoginModal = () => {
   const registerModal = useRegisterModal();
   const [isLoading, setIsLoading] = useState(false);
   const { setUser, setToken } = useUser();
+  const [showForgotPassword, setShowForgotPassword] = useState(false);
 
   const { 
     register, 
@@ -108,6 +110,14 @@ const LoginModal = () => {
         errors={errors}
         required
       />
+      <div className="text-right">
+        <span
+          className="text-blue-600 cursor-pointer text-sm hover:underline"
+          onClick={() => setShowForgotPassword(true)}
+        >
+          Forgot Password?
+        </span>
+      </div>
     </div>
   )
 
@@ -143,16 +153,22 @@ const LoginModal = () => {
   )
 
   return (
-    <Modal
-      disabled={isLoading}
-      isOpen={loginModal.isOpen}
-      title="Login"
-      actionLabel="Continue"
-      onClose={loginModal.onClose}
-      onSubmit={handleSubmit(onSubmit)}
-      body={bodyContent}
-      footer={footerContent}
-    />
+    <>
+      <Modal
+        disabled={isLoading}
+        isOpen={loginModal.isOpen}
+        title="Login"
+        actionLabel="Continue"
+        onClose={loginModal.onClose}
+        onSubmit={handleSubmit(onSubmit)}
+        body={bodyContent}
+        footer={footerContent}
+      />
+      <ForgotPasswordModal
+        isOpen={showForgotPassword}
+        onClose={() => setShowForgotPassword(false)}
+      />
+    </>
   );
 }
 
