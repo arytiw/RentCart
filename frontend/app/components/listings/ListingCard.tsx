@@ -7,6 +7,7 @@ import { format } from "date-fns";
 
 import useCountries from "@/app/hooks/useCountries";
 import { SafeListing, SafeReservation, SafeUser } from "@/app/types";
+import { useUser } from '@/app/providers/UserProvider';
 
 import HeartButton from "../HeartButton";
 import Button from "../Button";
@@ -32,10 +33,11 @@ const ListingCard: React.FC<ListingCardProps> = ({
   disabled,
   actionLabel,
   actionId = "",
-  currentUser,
+  // currentUser, // Remove prop-based currentUser
 }) => {
   const router = useRouter();
   const { getByValue } = useCountries();
+  const { user: currentUser } = useUser();
 
   // Handle location display - use direct location string if available
   const locationDisplay = data.locationValue || "Location not specified";

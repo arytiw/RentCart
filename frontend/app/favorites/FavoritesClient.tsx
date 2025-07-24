@@ -3,6 +3,7 @@ import { SafeListing, SafeUser } from "@/app/types";
 import Heading from "@/app/components/Heading";
 import Container from "@/app/components/Container";
 import ListingCard from "@/app/components/listings/ListingCard";
+import { useUser } from '@/app/providers/UserProvider';
 
 interface FavoritesClientProps {
   listings: SafeListing[],
@@ -10,9 +11,9 @@ interface FavoritesClientProps {
 }
 
 const FavoritesClient: React.FC<FavoritesClientProps> = ({
-  listings,
-  currentUser
+  listings
 }) => {
+  const { user: currentUser } = useUser();
   return (
     <Container>
       <Heading

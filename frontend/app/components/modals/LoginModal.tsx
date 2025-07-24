@@ -17,6 +17,7 @@ import useRegisterModal from "@/app/hooks/useRegisterModal";
 import useLoginModal from "@/app/hooks/useLoginModal";
 import { useUser } from '@/app/providers/UserProvider';
 import ForgotPasswordModal from './ForgotPasswordModal';
+import getCurrentUser from "@/app/actions/getCurrentUser";
 
 import Modal from "./Modal";
 import Input from "../inputs/Input";
@@ -66,7 +67,9 @@ const LoginModal = () => {
         if (response.ok) {
           const token = await response.text();
           setToken(token);
-          setUser({ emailId: payload.emailId });
+          // Fetch the full user profile
+          const fullUser = await getCurrentUser(token);
+          setUser(fullUser);
           toast.success('Logged in');
           router.refresh();
           loginModal.onClose();

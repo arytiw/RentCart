@@ -1,30 +1,21 @@
 import axios from "axios";
 
-export default async function getCurrentUser() {
+export default async function getCurrentUser(tokenArg?: string) {
   try {
-    // Get token from localStorage (client-side) or headers (server-side)
-    let token = null;
-    
-    if (typeof window !== 'undefined') {
-      // Client-side
+    // Use provided token or get from localStorage (client-side)
+    let token = tokenArg || null;
+    if (!token && typeof window !== 'undefined') {
       token = localStorage.getItem('authToken');
-    } else {
-      // Server-side - we'll need to pass token through headers
-      // For now, return null as server-side auth needs different handling
-      return null;
     }
-
     if (!token) {
       return null;
     }
-
     // Validate token with AuthService
     const response = await axios.post('http://localhost:8081/auth/validate', {}, {
       headers: {
         'Authorization': `Bearer ${token}`
       }
     });
-
     if (response.status === 200) {
       const userData = response.data;
       return {
@@ -38,7 +29,6 @@ export default async function getCurrentUser() {
         favoriteIds: []
       };
     }
-
     return null;
   } catch (error: any) {
     console.error("Error getting current user:", error);

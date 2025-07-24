@@ -116,20 +116,8 @@ const UserMenu: React.FC = () => {
                   onClick={() => router.push("/dashboard")}
                 />
                 <MenuItem
-                  label="My Orders"
-                  onClick={() => router.push("/orders")}
-                />
-                <MenuItem
                   label="My favorites"
                   onClick={() => router.push("/favorites")}
-                />
-                <MenuItem
-                  label="My Rentals"
-                  onClick={() => router.push("/reservations")}
-                />
-                <MenuItem
-                  label="My properties"
-                  onClick={() => router.push("/properties")}
                 />
                 <MenuItem label="Rent your stuff" onClick={rentModal.onOpen} />
                 <MenuItem label="Change Password" onClick={() => setShowChangePassword(true)} />

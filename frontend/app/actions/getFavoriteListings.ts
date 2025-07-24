@@ -1,30 +1,11 @@
-import prisma from "@/app/libs/prismadb";
-
-import getCurrentUser from "./getCurrentUser";
-
 export default async function getFavoriteListings() {
   try {
-    const currentUser = await getCurrentUser();
-
-    if (!currentUser) {
-      return [];
-    }
-
-    const favorites = await prisma.listing.findMany({
-      where: {
-        id: {
-          in: [...(currentUser.favoriteIds || [])]
-        }
-      }
-    });
-
-    const safeFavorites = favorites.map((favorite) => ({
-      ...favorite,
-      createdAt: favorite.createdAt.toString(),
-    }));
-
-    return safeFavorites;
+    const res = await fetch('/api/favorites/listings', { cache: 'no-store' });
+    if (!res.ok) throw new Error('Failed to fetch favorite listings');
+    const listings = await res.json();
+    return listings;
   } catch (error: any) {
-    throw new Error(error);
+    console.error('Error fetching favorite listings:', error);
+    return [];
   }
 }
