@@ -786,3 +786,5 @@ Consider defining a bean of type 'org.springframework.mail.javamail.JavaMailSend
 553 5.1.3 specifications. 98e67ed59e1d1-31e6635efc3sm3031403a91.22 - gsmtp
 
 2025-07-25 14:20:28 [http-nio-9092-exec-3] INFO  c.G.O.Controller.OrderController - Order confirmed successfully for user: KartikSaste with order ID: 68834551b8b8ded09623201d
+2025-07-25 14:50:36 [SpringApplicationShutdownHook] INFO  o.s.b.w.e.tomcat.GracefulShutdown - Commencing graceful shutdown. Waiting for active requests to complete
+2025-07-25 14:50:36 [tomcat-shutdown] INFO  o.s.b.w.e.tomcat.GracefulShutdown - Graceful shutdown complete

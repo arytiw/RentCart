@@ -16,9 +16,7 @@
     <artifactId>RentCart</artifactId>
     <version>0.0.1-SNAPSHOT</version>
     <name>RentCart</name>
-    <description>Demo project for Spring Boot with MongoDB</description>
-
-    <properties>
+    <description>Demo project for Spring Boot with MongoDB</description>    <properties>
         <java.version>17</java.version>
     </properties>
 
@@ -45,7 +43,6 @@
         <dependency>
             <groupId>org.projectlombok</groupId>
             <artifactId>lombok</artifactId>
-            <version>1.18.30</version>
             <scope>provided</scope>
         </dependency>
 
@@ -86,7 +83,6 @@
                         <path>
                             <groupId>org.projectlombok</groupId>
                             <artifactId>lombok</artifactId>
-                            <version>1.18.30</version>
                         </path>
                     </annotationProcessorPaths>
                 </configuration>

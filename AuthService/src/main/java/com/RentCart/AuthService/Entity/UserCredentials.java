@@ -1,7 +1,7 @@
 package com.RentCart.AuthService.Entity;
 
-
-
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.index.Indexed;
 import org.springframework.data.mongodb.core.mapping.Document;
@@ -10,136 +10,164 @@ import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Pattern;
 
 @Document(collection = "userCredentials")
-
 public class UserCredentials {
-	@Id
-	private String id;
-	@NotBlank(message = "Username is required")
-	private String username;
-	
-	@Pattern(
-		    regexp = "^[A-Za-z0-9+_.-]+@[A-Za-z0-9.-]+\\.[A-Za-z]{2,}$",
-		    message = "Email must be valid"
-		)
-	@NotBlank(message = "Email is required")
-	@Indexed(unique = true)
-	private String emailId;
-	@NotBlank(message = "Password is required")
-	private String password;
-	@Indexed(unique = true)
-	private String phoneNumber;
-	@NotBlank(message = "firstName is required")
-	private String firstName;
-	private String lastName;
-	private String gender;
-	private String dateOfBirth;
-	private Address address;
 
-	public UserCredentials(String id, String username, String emailId, String password, String phoneNumber,
-			String firstName, String lastName, String gender, String dateOfBirth, Address address) {
-		super();
-		this.id = id;
-		this.username = username;
-		this.emailId = emailId;
-		this.password = password;
-		this.phoneNumber = phoneNumber;
-		this.firstName = firstName;
-		this.lastName = lastName;
-		this.gender = gender;
-		this.dateOfBirth = dateOfBirth;
-		this.address = address;
-	}
+    private static final Logger logger = LoggerFactory.getLogger(UserCredentials.class);
 
-	public UserCredentials() {
-		super();
-		// TODO Auto-generated constructor stub
-	}
+    @Id
+    private String id;
 
-	public String getId() {
-		return id;
-	}
+    @NotBlank(message = "Username is required")
+    private String username;
 
-	public void setId(String id) {
-		this.id = id;
-	}
+    @Pattern(
+        regexp = "^[A-Za-z0-9+_.-]+@[A-Za-z0-9.-]+\\.[A-Za-z]{2,}$",
+        message = "Email must be valid"
+    )
+    @NotBlank(message = "Email is required")
+    @Indexed(unique = true)
+    private String emailId;
 
-	public String getUsername() {
-		return username;
-	}
+    @NotBlank(message = "Password is required")
+    private String password;
 
-	public void setUsername(String username) {
-		this.username = username;
-	}
+    @Indexed(unique = true)
+    private String phoneNumber;
 
-	public String getEmailId() {
-		return emailId;
-	}
+    @NotBlank(message = "firstName is required")
+    private String firstName;
 
-	public void setEmailId(String emailId) {
-		this.emailId = emailId;
-	}
+    private String lastName;
+    private String gender;
+    private String dateOfBirth;
+    private Address address;
 
-	public String getPassword() {
-		return password;
-	}
+    public UserCredentials(String id, String username, String emailId, String password, String phoneNumber,
+                            String firstName, String lastName, String gender, String dateOfBirth, Address address) {
+        logger.info("Creating UserCredentials with ID: {}, username: {}, emailId: {}", id, username, emailId);
+        this.id = id;
+        this.username = username;
+        this.emailId = emailId;
+        this.password = password;
+        this.phoneNumber = phoneNumber;
+        this.firstName = firstName;
+        this.lastName = lastName;
+        this.gender = gender;
+        this.dateOfBirth = dateOfBirth;
+        this.address = address;
+    }
 
-	public void setPassword(String password) {
-		this.password = password;
-	}
+    public UserCredentials() {
+        logger.debug("Creating empty UserCredentials object");
+    }
 
-	public String getPhoneNumber() {
-		return phoneNumber;
-	}
+    public String getId() {
+        logger.debug("Getting id: {}", id);
+        return id;
+    }
 
-	public void setPhoneNumber(String phoneNumber) {
-		this.phoneNumber = phoneNumber;
-	}
+    public void setId(String id) {
+        logger.info("Setting id: {}", id);
+        this.id = id;
+    }
 
-	public String getFirstName() {
-		return firstName;
-	}
+    public String getUsername() {
+        logger.debug("Getting username: {}", username);
+        return username;
+    }
 
-	public void setFirstName(String firstName) {
-		this.firstName = firstName;
-	}
+    public void setUsername(String username) {
+        logger.info("Setting username: {}", username);
+        this.username = username;
+    }
 
-	public String getLastName() {
-		return lastName;
-	}
+    public String getEmailId() {
+        logger.debug("Getting emailId: {}", emailId);
+        return emailId;
+    }
 
-	public void setLastName(String lastName) {
-		this.lastName = lastName;
-	}
+    public void setEmailId(String emailId) {
+        logger.info("Setting emailId: {}", emailId);
+        this.emailId = emailId;
+    }
 
-	public String getGender() {
-		return gender;
-	}
+    public String getPassword() {
+        logger.debug("Getting password");
+        return password;
+    }
 
-	public void setGender(String gender) {
-		this.gender = gender;
-	}
+    public void setPassword(String password) {
+        logger.info("Setting password (encrypted or raw): {}", password != null ? "[PROTECTED]" : null);
+        this.password = password;
+    }
 
-	public String getDateOfBirth() {
-		return dateOfBirth;
-	}
+    public String getPhoneNumber() {
+        logger.debug("Getting phoneNumber: {}", phoneNumber);
+        return phoneNumber;
+    }
 
-	public void setDateOfBirth(String dateOfBirth) {
-		this.dateOfBirth = dateOfBirth;
-	}
+    public void setPhoneNumber(String phoneNumber) {
+        logger.info("Setting phoneNumber: {}", phoneNumber);
+        this.phoneNumber = phoneNumber;
+    }
 
-	public Address getAddress() {
-		return address;
-	}
+    public String getFirstName() {
+        logger.debug("Getting firstName: {}", firstName);
+        return firstName;
+    }
 
-	public void setAddress(Address address) {
-		this.address = address;
-	}
+    public void setFirstName(String firstName) {
+        logger.info("Setting firstName: {}", firstName);
+        this.firstName = firstName;
+    }
 
-	@Override
-	public String toString() {
-		return "UserCredentials [id=" + id + ", username=" + username + ", emailId=" + emailId + ", password="
-				+ password + ", phoneNumber=" + phoneNumber + ", firstName=" + firstName + ", lastName=" + lastName
-				+ ", gender=" + gender + ", dateOfBirth=" + dateOfBirth + ", address=" + address + "]";
-	}
+    public String getLastName() {
+        logger.debug("Getting lastName: {}", lastName);
+        return lastName;
+    }
 
+    public void setLastName(String lastName) {
+        logger.info("Setting lastName: {}", lastName);
+        this.lastName = lastName;
+    }
+
+    public String getGender() {
+        logger.debug("Getting gender: {}", gender);
+        return gender;
+    }
+
+    public void setGender(String gender) {
+        logger.info("Setting gender: {}", gender);
+        this.gender = gender;
+    }
+
+    public String getDateOfBirth() {
+        logger.debug("Getting dateOfBirth: {}", dateOfBirth);
+        return dateOfBirth;
+    }
+
+    public void setDateOfBirth(String dateOfBirth) {
+        logger.info("Setting dateOfBirth: {}", dateOfBirth);
+        this.dateOfBirth = dateOfBirth;
+    }
+
+    public Address getAddress() {
+        logger.debug("Getting address: {}", address);
+        return address;
+    }
+
+    public void setAddress(Address address) {
+        logger.info("Setting address: {}", address);
+        this.address = address;
+    }
+
+    @Override
+    public String toString() {
+        String result = "UserCredentials [id=" + id + ", username=" + username + ", emailId=" + emailId +
+                ", password=[PROTECTED], phoneNumber=" + phoneNumber + ", firstName=" + firstName +
+                ", lastName=" + lastName + ", gender=" + gender + ", dateOfBirth=" + dateOfBirth +
+                ", address=" + address + "]";
+        logger.debug("Converting UserCredentials to String: {}", result);
+        return result;
+    }
 }
