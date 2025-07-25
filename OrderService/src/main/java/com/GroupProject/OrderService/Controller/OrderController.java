@@ -222,6 +222,13 @@ public class OrderController {
         return ResponseEntity.ok(orderService.cancelOrder(orderId));
     }
 
+    @PatchMapping("/{orderId}/deliver")
+    public ResponseEntity<OrderEntity> markOrderAsDelivered(@PathVariable String orderId) {
+        OrderEntity order = orderService.getOrder(orderId);
+        order.setStatus("DELIVERED");
+        return ResponseEntity.ok(orderService.save(order));
+    }
+
     @PutMapping("/{orderId}")
     public ResponseEntity<OrderEntity> updateOrder(@PathVariable String orderId, @RequestBody OrderRequest request) {
         return ResponseEntity.ok(orderService.updateOrder(orderId, request));

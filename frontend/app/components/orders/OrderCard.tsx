@@ -3,6 +3,8 @@
 import { useRouter } from "next/navigation";
 import { useCallback, useMemo } from "react";
 import { format } from "date-fns";
+import axios from "axios";
+import { toast } from "react-hot-toast";
 
 import { SafeUser } from "@/app/types";
 
@@ -98,6 +100,23 @@ const OrderCard: React.FC<OrderCardProps> = ({
             small
             label={actionLabel}
             onClick={handleCancel}
+          />
+        )}
+        {/* Mark as Delivered button for PLACED orders */}
+        {data.status === 'PLACED' && (
+          <Button
+            label="Mark as Delivered"
+            small
+            onClick={async (e) => {
+              e.stopPropagation();
+              try {
+                await axios.patch(`/api/orders/${data.id}/deliver`);
+                toast.success('Order marked as delivered');
+                router.refresh();
+              } catch (err: any) {
+                toast.error('Failed to mark as delivered');
+              }
+            }}
           />
         )}
       </div>

@@ -143,6 +143,10 @@ public class OrderService {
         return orderRepository.save(order);
     }
 
+    public OrderEntity save(OrderEntity order) {
+        return orderRepository.save(order);
+    }
+
     private double applyDiscount(double totalAmount, String couponCode) {
         if (couponCode != null && couponCode.equalsIgnoreCase("SAVE10")) {
             return totalAmount * 0.9;

@@ -63,7 +63,7 @@ public class ReviewController {
         List<Review> reviews = reviewService.getReviewsByItemId(itemId);
         if (reviews == null || reviews.isEmpty()) {
             logger.warn("No reviews found for item ID: {}", itemId);
-            throw new ResourceNotFound("No reviews found for item ID " + itemId);
+            return List.of(); // Return empty list with 200 OK
         }
         return reviews;
     }
@@ -87,7 +87,7 @@ public double getAverageRatingByItemId(@PathVariable String itemId) {
     
     if (reviews == null || reviews.isEmpty()) {
         logger.warn("No reviews found for item ID: {}", itemId);
-        throw new ResourceNotFound("No reviews found for item ID " + itemId);
+        return 0.0; // Return 0 with 200 OK
     }
 
     double totalRating = 0.0;

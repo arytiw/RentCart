@@ -46,7 +46,7 @@ public class RazorpayService {
             logger.info("Initializing Razorpay client...");
             com.razorpay.RazorpayClient client = new com.razorpay.RazorpayClient(razorpayKey, razorpaySecret);
             org.json.JSONObject options = new org.json.JSONObject();
-            int amountInPaise = (int) (request.getAmount());
+            int amountInPaise = (int) (request.getAmount().doubleValue() * 100);
             options.put("amount", amountInPaise);
             options.put("currency", request.getCurrency());
             options.put("receipt", request.getReceipt());

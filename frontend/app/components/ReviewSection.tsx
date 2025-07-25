@@ -8,6 +8,7 @@ import addReview from '@/app/actions/addReview';
 import { SafeUser } from '@/app/types';
 import Button from './Button';
 import { toast } from 'react-hot-toast';
+import getOrders from '@/app/actions/getOrders';
 
 interface ReviewSectionProps {
   itemId: string;
@@ -26,11 +27,13 @@ const ReviewSection: React.FC<ReviewSectionProps> = ({
     comment: '',
     rating: 5
   });
+  const [canReview, setCanReview] = useState(false);
 
   useEffect(() => {
     fetchReviews();
     fetchAverageRating();
-  }, [itemId]);
+    checkReviewEligibility();
+  }, [itemId, currentUser]);
 
   const fetchReviews = async () => {
     try {
@@ -81,6 +84,29 @@ const ReviewSection: React.FC<ReviewSectionProps> = ({
     }
   };
 
+  const checkReviewEligibility = async () => {
+    if (!currentUser) {
+      setCanReview(false);
+      return;
+    }
+    try {
+      const orders = await getOrders();
+      // Debug log
+      console.log('Fetched orders:', orders);
+      console.log('Current user email:', currentUser.email);
+      // Check if any order is DELIVERED and contains this itemId
+      const eligible = orders.some((order: any) =>
+        order.status === 'DELIVERED' &&
+        Array.isArray(order.itemIds) &&
+        order.itemIds.includes(itemId) &&
+        order.userId === currentUser.email
+      );
+      setCanReview(eligible);
+    } catch (error) {
+      setCanReview(false);
+    }
+  };
+
   const formatDate = (timestamp: number) => {
     return new Date(timestamp).toLocaleDateString('en-US', {
       year: 'numeric',
@@ -113,7 +139,7 @@ const ReviewSection: React.FC<ReviewSectionProps> = ({
         </div>
       </div>
 
-      {currentUser && (
+      {currentUser && canReview && (
         <div className="flex flex-col gap-4">
           {!showAddReview ? (
             <Button
@@ -171,6 +197,9 @@ const ReviewSection: React.FC<ReviewSectionProps> = ({
             </div>
           )}
         </div>
+      )}
+      {currentUser && !canReview && (
+        <div className="text-neutral-500">You can only review this item after completing an order.</div>
       )}
 
       <div className="flex flex-col gap-4">
