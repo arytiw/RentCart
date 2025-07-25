@@ -2,6 +2,8 @@ package com.GroupProject.ItemService.Repository;
 
 import java.util.List;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.data.mongodb.repository.MongoRepository;
 import org.springframework.stereotype.Repository;
 
@@ -10,6 +12,13 @@ import com.GroupProject.ItemService.Entity.ItemType;
 
 @Repository
 public interface ItemRepository extends MongoRepository<Item, String> {
+
+    Logger logger = LoggerFactory.getLogger(ItemRepository.class);
+
+    default void logQuery(String methodName, Object... params) {
+        logger.info("Executing repository method: {} with parameters: {}", methodName, params);
+    }
+
     List<Item> findByType(ItemType type);
     List<Item> findByCategoryIgnoreCase(String category);
     List<Item> findByUserId(String userId);

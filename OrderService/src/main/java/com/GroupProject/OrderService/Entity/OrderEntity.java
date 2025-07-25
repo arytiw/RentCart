@@ -101,11 +101,15 @@ package com.GroupProject.OrderService.Entity;
 import java.time.LocalDateTime;
 import java.util.List;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.Document;
 
 @Document(collection = "orders")
 public class OrderEntity {
+
+    private static final Logger logger = LoggerFactory.getLogger(OrderEntity.class);
 
     @Id
     private String id;
@@ -122,7 +126,9 @@ public class OrderEntity {
     private String paymentStatus;
     private String couponCode; // ✅ NEW
 
-    public OrderEntity() {}
+    public OrderEntity() {
+        logger.debug("OrderEntity: Default constructor called");
+    }
 
     public OrderEntity(String id, String orderId, String userId, String address, List<String> itemIds,
                        double totalAmount, LocalDateTime orderDate, LocalDateTime estimatedDeliveryDate,
@@ -139,46 +145,129 @@ public class OrderEntity {
         this.paymentMode = paymentMode;
         this.paymentStatus = paymentStatus;
         this.couponCode = couponCode;
+        logger.debug("OrderEntity: Parameterized constructor called with id={}, orderId={}, userId={}, totalAmount={}, status={}, paymentMode={}",
+                id, orderId, userId, totalAmount, status, paymentMode);
     }
 
-    // Getters and Setters
-    public String getId() { return id; }
-    public void setId(String id) { this.id = id; }
+    public String getId() {
+        logger.debug("getId called, returning: {}", id);
+        return id;
+    }
 
-    public String getOrderId() { return orderId; }
-    public void setOrderId(String orderId) { this.orderId = orderId; }
+    public void setId(String id) {
+        logger.debug("setId called with: {}", id);
+        this.id = id;
+    }
 
-    public String getUserId() { return userId; }
-    public void setUserId(String userId) { this.userId = userId; }
+    public String getOrderId() {
+        logger.debug("getOrderId called, returning: {}", orderId);
+        return orderId;
+    }
 
-    public String getAddress() { return address; }
-    public void setAddress(String address) { this.address = address; }
+    public void setOrderId(String orderId) {
+        logger.debug("setOrderId called with: {}", orderId);
+        this.orderId = orderId;
+    }
 
-    public List<String> getItemIds() { return itemIds; }
-    public void setItemIds(List<String> itemIds) { this.itemIds = itemIds; }
+    public String getUserId() {
+        logger.debug("getUserId called, returning: {}", userId);
+        return userId;
+    }
 
-    public double getTotalAmount() { return totalAmount; }
-    public void setTotalAmount(double totalAmount) { this.totalAmount = totalAmount; }
+    public void setUserId(String userId) {
+        logger.debug("setUserId called with: {}", userId);
+        this.userId = userId;
+    }
 
-    public LocalDateTime getOrderDate() { return orderDate; }
-    public void setOrderDate(LocalDateTime orderDate) { this.orderDate = orderDate; }
+    public String getAddress() {
+        logger.debug("getAddress called, returning: {}", address);
+        return address;
+    }
 
-    public LocalDateTime getEstimatedDeliveryDate() { return estimatedDeliveryDate; }
+    public void setAddress(String address) {
+        logger.debug("setAddress called with: {}", address);
+        this.address = address;
+    }
+
+    public List<String> getItemIds() {
+        logger.debug("getItemIds called, returning: {}", itemIds);
+        return itemIds;
+    }
+
+    public void setItemIds(List<String> itemIds) {
+        logger.debug("setItemIds called with: {}", itemIds);
+        this.itemIds = itemIds;
+    }
+
+    public double getTotalAmount() {
+        logger.debug("getTotalAmount called, returning: {}", totalAmount);
+        return totalAmount;
+    }
+
+    public void setTotalAmount(double totalAmount) {
+        logger.debug("setTotalAmount called with: {}", totalAmount);
+        this.totalAmount = totalAmount;
+    }
+
+    public LocalDateTime getOrderDate() {
+        logger.debug("getOrderDate called, returning: {}", orderDate);
+        return orderDate;
+    }
+
+    public void setOrderDate(LocalDateTime orderDate) {
+        logger.debug("setOrderDate called with: {}", orderDate);
+        this.orderDate = orderDate;
+    }
+
+    public LocalDateTime getEstimatedDeliveryDate() {
+        logger.debug("getEstimatedDeliveryDate called, returning: {}", estimatedDeliveryDate);
+        return estimatedDeliveryDate;
+    }
+
     public void setEstimatedDeliveryDate(LocalDateTime estimatedDeliveryDate) {
+        logger.debug("setEstimatedDeliveryDate called with: {}", estimatedDeliveryDate);
         this.estimatedDeliveryDate = estimatedDeliveryDate;
     }
 
-    public String getStatus() { return status; }
-    public void setStatus(String status) { this.status = status; }
+    public String getStatus() {
+        logger.debug("getStatus called, returning: {}", status);
+        return status;
+    }
 
-    public String getPaymentMode() { return paymentMode; }
-    public void setPaymentMode(String paymentMode) { this.paymentMode = paymentMode; }
+    public void setStatus(String status) {
+        logger.debug("setStatus called with: {}", status);
+        this.status = status;
+    }
 
-    public String getPaymentStatus() { return paymentStatus; }
-    public void setPaymentStatus(String paymentStatus) { this.paymentStatus = paymentStatus; }
+    public String getPaymentMode() {
+        logger.debug("getPaymentMode called, returning: {}", paymentMode);
+        return paymentMode;
+    }
 
-    public String getCouponCode() { return couponCode; }
-    public void setCouponCode(String couponCode) { this.couponCode = couponCode; }
+    public void setPaymentMode(String paymentMode) {
+        logger.debug("setPaymentMode called with: {}", paymentMode);
+        this.paymentMode = paymentMode;
+    }
+
+    public String getPaymentStatus() {
+        logger.debug("getPaymentStatus called, returning: {}", paymentStatus);
+        return paymentStatus;
+    }
+
+    public void setPaymentStatus(String paymentStatus) {
+        logger.debug("setPaymentStatus called with: {}", paymentStatus);
+        this.paymentStatus = paymentStatus;
+    }
+
+    public String getCouponCode() {
+        logger.debug("getCouponCode called, returning: {}", couponCode);
+        return couponCode;
+    }
+
+    public void setCouponCode(String couponCode) {
+        logger.debug("setCouponCode called with: {}", couponCode);
+        this.couponCode = couponCode;
+    }
 
     @Override
     public String toString() {
