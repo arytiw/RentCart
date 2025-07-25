@@ -71,6 +71,7 @@ import java.util.List;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
@@ -109,6 +110,10 @@ public class ItemController {
     // Add item (Admin only - optionally)
     @PostMapping
     public ResponseEntity<Item> addItem(@RequestBody Item item) {
+        // Set default stockQuantity if not provided
+        if (item.getStockQuantity() == 0) {
+            item.setStockQuantity(1);
+        }
         Item savedItem = itemRepository.save(item);
         return ResponseEntity.ok(savedItem);
     }
@@ -124,6 +129,15 @@ public class ItemController {
             existingItem.setImageUrl(updatedItem.getImageUrl());
             existingItem.setStockQuantity(updatedItem.getStockQuantity());
             existingItem.setUserId(updatedItem.getUserId());
+            return ResponseEntity.ok(itemRepository.save(existingItem));
+        }).orElse(ResponseEntity.notFound().build());
+    }
+
+    // Update stock quantity (Admin only - optionally)
+    @PatchMapping("/{id}/quantity")
+    public ResponseEntity<Item> updateStockQuantity(@PathVariable String id, @RequestBody int stockQuantity) {
+        return itemRepository.findById(id).map(existingItem -> {
+            existingItem.setStockQuantity(stockQuantity);
             return ResponseEntity.ok(itemRepository.save(existingItem));
         }).orElse(ResponseEntity.notFound().build());
     }

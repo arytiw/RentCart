@@ -2,12 +2,16 @@ package com.GroupProject.OrderService.Service;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.mail.SimpleMailMessage;
+import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.stereotype.Service;
+import org.springframework.web.client.RestTemplate;
 
 import com.GroupProject.OrderService.Dto.OrderRequest;
 import com.GroupProject.OrderService.Entity.Item;
@@ -28,6 +32,9 @@ public class OrderService {
 
     @Autowired
     private RazorpayService razorpayService;
+
+    @Autowired
+    private JavaMailSender mailSender;
 
     public double calculateTotalAmount(List<String> itemIds, String couponCode) {
         try {
@@ -85,6 +92,7 @@ public class OrderService {
         OrderEntity savedOrder = orderRepository.save(order);
         String orderId = savedOrder.getId() != null ? savedOrder.getId() : savedOrder.getOrderId();
         logger.info("Order placed successfully with ID: {}", orderId);
+        sendOrderConfirmationEmail(savedOrder, foundItems);
         return savedOrder;
     }
 
@@ -152,5 +160,42 @@ public class OrderService {
             return totalAmount * 0.9;
         }
         return totalAmount;
+    }
+
+    private String getUserEmailFromAuthService(String userId) {
+        try {
+            RestTemplate restTemplate = new RestTemplate();
+            String url = "http://localhost:8081/auth/user?email=" + userId;
+            Map response = restTemplate.getForObject(url, Map.class);
+            if (response != null && response.containsKey("emailId")) {
+                return (String) response.get("emailId");
+            }
+        } catch (Exception e) {
+            logger.error("Failed to fetch user email from AuthService: {}", e.getMessage());
+        }
+        return userId; // fallback
+    }
+
+    private void sendOrderConfirmationEmail(OrderEntity order, List<Item> items) {
+        try {
+            String recipientEmail = getUserEmailFromAuthService(order.getUserId());
+            SimpleMailMessage message = new SimpleMailMessage();
+            message.setFrom("vedantsalvi2353@gmail.com");
+            message.setTo(recipientEmail);
+            message.setSubject("Order Confirmed: " + order.getOrderId());
+            StringBuilder sb = new StringBuilder();
+            sb.append("Your order has been confirmed!\n\n");
+            sb.append("Order ID: ").append(order.getOrderId()).append("\n");
+            sb.append("Address: ").append(order.getAddress()).append("\n");
+            sb.append("Total Amount: Rs ").append(order.getTotalAmount()).append("\n");
+            sb.append("Items:\n");
+            for (Item item : items) {
+                sb.append("- ").append(item.getTitle()).append(" (Qty: 1)").append("\n");
+            }
+            message.setText(sb.toString());
+            mailSender.send(message);
+        } catch (Exception e) {
+            logger.error("Failed to send order confirmation email: {}", e.getMessage());
+        }
     }
 }

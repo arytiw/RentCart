@@ -230,6 +230,18 @@ const DashboardClient: React.FC<DashboardClientProps> = () => {
 
   return (
     <div className="flex flex-col gap-12">
+      {/* User Profile Card */}
+      <div className="flex items-center gap-6 bg-black rounded-xl p-6 mb-4">
+        <div className="w-20 h-20 rounded-full flex items-center justify-center bg-violet-900">
+          <span className="text-5xl font-bold text-violet-400">
+            {currentUser?.name?.charAt(0) || 'U'}
+          </span>
+        </div>
+        <div>
+          <div className="text-2xl font-semibold text-white">{currentUser?.name}</div>
+          <div className="text-lg text-gray-400">{currentUser?.email}</div>
+        </div>
+      </div>
       {/* Activity Summary / Insights */}
       <div className="bg-white rounded-xl shadow p-6 mb-4 flex flex-col md:flex-row gap-6 items-center justify-between">
         <div className="flex flex-col items-center gap-2">

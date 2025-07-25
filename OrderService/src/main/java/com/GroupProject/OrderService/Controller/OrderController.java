@@ -7,8 +7,11 @@ import java.util.Map;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.mail.SimpleMailMessage;
+import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -16,6 +19,7 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.GroupProject.OrderService.Dto.OrderRequest;
@@ -25,6 +29,8 @@ import com.GroupProject.OrderService.Entity.OrderEntity;
 import com.GroupProject.OrderService.Service.OrderService;
 import com.GroupProject.OrderService.Service.RazorpayService;
 
+import jakarta.servlet.http.HttpServletRequest;
+
 @RestController
 @RequestMapping("/orders")
 public class OrderController {
@@ -33,6 +39,9 @@ public class OrderController {
 
     private final OrderService orderService;
     private final RazorpayService razorpayService;
+
+    @Autowired
+    private JavaMailSender mailSender;
 
     public OrderController(OrderService orderService, RazorpayService razorpayService) {
         this.orderService = orderService;
@@ -74,10 +83,26 @@ public class OrderController {
         }
     }
 
-    @PostMapping
-    public ResponseEntity<?> initiateOrder(@RequestBody OrderRequest request, Principal principal) {
+    @GetMapping("/test-email")
+    public ResponseEntity<String> sendTestEmail(@RequestParam String to) {
         try {
-            String userId = (principal != null) ? principal.getName() : "KartikSaste";
+            SimpleMailMessage message = new SimpleMailMessage();
+            message.setFrom("vedantsalvi2353@gmail.com");
+            message.setTo(to);
+            message.setSubject("Test Email from RentCart OrderService");
+            message.setText("This is a test email. If you received this, your mail setup works!");
+            mailSender.send(message);
+            return ResponseEntity.ok("Test email sent to " + to);
+        } catch (Exception e) {
+            return ResponseEntity.status(500).body("Failed to send test email: " + e.getMessage());
+        }
+    }
+
+    @PostMapping
+    public ResponseEntity<?> initiateOrder(@RequestBody OrderRequest request, Principal principal, HttpServletRequest httpRequest) {
+        try {
+            String userEmail = httpRequest.getHeader("X-USER-EMAIL");
+            String userId = (userEmail != null && !userEmail.isEmpty()) ? userEmail : (principal != null ? principal.getName() : "KartikSaste");
             logger.info("Initiating order for user: {}", userId);
 
             // 1. Calculate final amount with coupon if any

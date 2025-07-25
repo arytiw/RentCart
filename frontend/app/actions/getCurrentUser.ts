@@ -26,7 +26,8 @@ export default async function getCurrentUser(tokenArg?: string) {
         createdAt: new Date().toISOString(),
         updatedAt: new Date().toISOString(),
         emailVerified: null,
-        favoriteIds: []
+        favoriteIds: [],
+        hashedPassword: null // Add this line to satisfy SafeUser type
       };
     }
     return null;

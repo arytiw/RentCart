@@ -66,6 +66,15 @@ const ItemClient: React.FC<ItemClientProps> = ({
                   {category?.label}
                 </div>
               </div>
+              {/* Show item quantity */}
+              <div className="flex flex-col gap-2">
+                <div className="text-xl font-semibold flex flex-row items-center gap-2">
+                  <div>Quantity Available</div>
+                </div>
+                <div className="text-neutral-500 font-light">
+                  {typeof item.stockQuantity === 'number' ? item.stockQuantity : (item.stockQuantity ?? 'N/A')}
+                </div>
+              </div>
               <hr />
               <div className="flex flex-col gap-2">
                 <div className="text-xl font-semibold">

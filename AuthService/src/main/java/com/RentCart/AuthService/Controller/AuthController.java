@@ -17,6 +17,7 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.RentCart.AuthService.Config.JWTProvider;
@@ -64,6 +65,23 @@ public class AuthController {
     public ResponseEntity<List<UserCredentials>> getAllUser() {
         logger.info("Fetching all users");
         return ResponseEntity.ok(service.getAllUser());
+    }
+
+    @GetMapping("/user")
+    public ResponseEntity<?> getUserByEmailId(@RequestParam String email) {
+        UserCredentials user = service.getUserByEmailId(email);
+        if (user == null) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("User not found");
+        }
+        Map<String, Object> userData = new HashMap<>();
+        userData.put("username", user.getUsername());
+        userData.put("emailId", user.getEmailId());
+        userData.put("firstName", user.getFirstName());
+        userData.put("lastName", user.getLastName());
+        userData.put("phoneNumber", user.getPhoneNumber());
+        userData.put("gender", user.getGender());
+        userData.put("dateOfBirth", user.getDateOfBirth());
+        return ResponseEntity.ok(userData);
     }
 
     @PostMapping("/login")

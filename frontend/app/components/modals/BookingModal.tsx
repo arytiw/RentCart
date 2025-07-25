@@ -30,7 +30,7 @@ const BookingModal: React.FC<BookingModalProps> = ({
 }) => {
   const router = useRouter();
   const bookingModal = useBookingModal();
-  const { token } = useUser();
+  const { token, user: currentUser } = useUser();
   const [isLoading, setIsLoading] = useState(false);
   const [paymentStep, setPaymentStep] = useState<'details' | 'payment'>('details');
 
@@ -74,7 +74,8 @@ const BookingModal: React.FC<BookingModalProps> = ({
       // Initiate order with backend to get Razorpay order details
       const orderResponse = await axios.post('/api/orders', orderRequest, {
         headers: {
-          'Authorization': `Bearer ${authToken}`
+          'Authorization': `Bearer ${authToken}`,
+          'X-USER-EMAIL': currentUser?.email || ''
         }
       });
 

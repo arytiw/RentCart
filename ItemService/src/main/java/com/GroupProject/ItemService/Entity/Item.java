@@ -90,6 +90,9 @@ public class Item {
     @Field("securityDeposit")
     private double securityDeposit = 0.0;
 
+    @Field("stockQuantity")
+    private int stockQuantity = 1;
+
     // Getters and Setters
     public String getId() {
         return id;
@@ -217,5 +220,12 @@ public class Item {
 
     public void setSecurityDeposit(double securityDeposit) {
         this.securityDeposit = securityDeposit;
+    }
+
+    public int getStockQuantity() {
+        return stockQuantity;
+    }
+    public void setStockQuantity(int stockQuantity) {
+        this.stockQuantity = stockQuantity;
     }
 }

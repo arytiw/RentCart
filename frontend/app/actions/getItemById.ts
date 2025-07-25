@@ -21,7 +21,8 @@ export default async function getItemById(itemId: string) {
       rating: item.rating,
       securityDeposit: item.securityDeposit,
       usagePolicy: item.usagePolicy,
-      features: item.features || []
+      features: item.features || [],
+      stockQuantity: item.stockQuantity
     };
   } catch (error: any) {
     console.error("Error fetching item:", error);

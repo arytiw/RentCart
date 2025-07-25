@@ -55,7 +55,8 @@ export async function GET(
       rating: item.rating,
       securityDeposit: item.securityDeposit,
       usagePolicy: item.usagePolicy,
-      features: item.features || []
+      features: item.features || [],
+      stockQuantity: item.stockQuantity
     };
 
     return NextResponse.json(transformedItem);

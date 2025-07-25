@@ -8,7 +8,7 @@ const Logo = () => {
   return ( 
     <div
       onClick={() => router.push('/')}
-      className="hidden md:block cursor-pointer font-bold text-2xl text-rose-500 hover:text-rose-600 transition-colors"
+      className="hidden md:block cursor-pointer font-bold text-3xl text-violet-500 hover:text-rose-600 transition-colors"
     >
       RentCart
     </div>
