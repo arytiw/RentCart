@@ -8,6 +8,11 @@ interface User {
   firstName?: string;
   lastName?: string;
   emailId?: string;
+  phoneNumber?: string;
+  gender?: string;
+  dateOfBirth?: string;
+  email?: string;
+  name?: string;
   [key: string]: any;
 }
 
@@ -30,7 +35,7 @@ export const UserProvider = ({ children }: { children: any }) => {
     if (storedToken) {
       setToken(storedToken);
       getCurrentUser(storedToken).then(userData => {
-        if (userData) setUser({ ...userData, emailId: userData.email });
+        if (userData) setUser(userData);
         else setUser(null);
       });
     } else {

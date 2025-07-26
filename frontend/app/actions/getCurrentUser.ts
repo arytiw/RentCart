@@ -22,6 +22,12 @@ export default async function getCurrentUser(tokenArg?: string) {
         id: userData.emailId, // Using emailId as ID for consistency
         email: userData.emailId,
         emailId: userData.emailId, // ensure emailId is present
+        username: userData.username, // Include username
+        firstName: userData.firstName, // Include firstName
+        lastName: userData.lastName, // Include lastName
+        phoneNumber: userData.phoneNumber, // Include phoneNumber
+        gender: userData.gender, // Include gender
+        dateOfBirth: userData.dateOfBirth, // Include dateOfBirth
         name: userData.firstName || userData.username,
         image: null,
         createdAt: new Date().toISOString(),
