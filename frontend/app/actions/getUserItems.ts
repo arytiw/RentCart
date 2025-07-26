@@ -1,0 +1,60 @@
+export default async function getUserItems(userEmail: string) {
+  try {
+    console.log('getUserItems called with email:', userEmail);
+    
+    const url = `/api/items/user/${encodeURIComponent(userEmail)}`;
+    console.log('Making request to frontend API:', url);
+    
+    const res = await fetch(url, { 
+      cache: 'no-store',
+      headers: {
+        'Content-Type': 'application/json',
+      }
+    });
+    
+    console.log('Response status:', res.status);
+    console.log('Response ok:', res.ok);
+    
+    if (!res.ok) {
+      if (res.status === 404) {
+        console.log('No items found for user (404)');
+        return [];
+      }
+      const errorText = await res.text();
+      console.error('API Error:', res.status, errorText);
+      throw new Error(`Failed to fetch user items: ${res.status} ${errorText}`);
+    }
+    
+    const items = await res.json();
+    console.log('getUserItems RAW RESPONSE:', items);
+    
+    if (!Array.isArray(items)) {
+      console.error('Expected array but got:', typeof items, items);
+      return [];
+    }
+    const mapped = items.map((item: any) => ({
+      id: item.id,
+      title: item.title,
+      description: item.description,
+      imageSrc: item.images && item.images.length > 0 ? item.images[0] : '/images/placeholder.jpg',
+      locationValue: item.location || '',
+      category: item.category,
+      itemCount: 1,
+      price: item.price,
+      userId: item.userId,
+      createdAt: item.createdAt,
+      type: item.type,
+      available: item.available,
+      rating: item.rating,
+      securityDeposit: item.securityDeposit,
+      usagePolicy: item.usagePolicy,
+      features: item.features || [],
+      quantity: item.quantity || 1
+    }));
+    console.log('getUserItems MAPPED:', mapped); // Debug log
+    return mapped;
+  } catch (error: any) {
+    console.error("Error fetching user items:", error);
+    return [];
+  }
+} 
