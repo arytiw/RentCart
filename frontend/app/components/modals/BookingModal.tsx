@@ -16,6 +16,7 @@ interface BookingModalProps {
   ownerEmail: string;
   currentUser: any;
   securityDeposit?: number;
+  itemType: string; // <-- Add this line
 }
 
 interface BookingData {
@@ -50,7 +51,8 @@ const BookingModal: React.FC<BookingModalProps> = ({
   dailyRate,
   ownerEmail,
   currentUser,
-  securityDeposit = 0
+  securityDeposit = 0,
+  itemType // <-- Add this line
 }) => {
   const { token, user, refreshUser } = useUser(); // Get token, user, and refreshUser from UserProvider context
   const router = useRouter();
@@ -578,7 +580,7 @@ const BookingModal: React.FC<BookingModalProps> = ({
         <div className="bg-gradient-to-r from-blue-600 to-purple-600 p-6 rounded-t-xl">
           <div className="flex justify-between items-center">
             <h2 className="text-xl font-bold text-white">
-              {step === 'details' ? 'Book Item' : 
+              {step === 'details' ? (itemType === "SELL" ? 'Buy Item' : 'Book Item') : 
                step === 'payment' ? 'Payment' : 'Booking Confirmed'}
             </h2>
             <button
@@ -597,31 +599,36 @@ const BookingModal: React.FC<BookingModalProps> = ({
           {/* Step 1: Booking Details */}
           {step === 'details' && (
             <div className="space-y-6">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Start Date
-                </label>
-                <input
-                  type="date"
-                  value={bookingData.startDate}
-                  onChange={(e) => setBookingData(prev => ({ ...prev, startDate: e.target.value }))}
-                  min={new Date().toISOString().split('T')[0]}
-                  className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                />
-              </div>
+              {/* Only show calendar and notes for RENT */}
+              {itemType !== "SELL" && (
+                <>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Start Date
+                    </label>
+                    <input
+                      type="date"
+                      value={bookingData.startDate}
+                      onChange={(e) => setBookingData(prev => ({ ...prev, startDate: e.target.value }))}
+                      min={new Date().toISOString().split('T')[0]}
+                      className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    />
+                  </div>
 
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  End Date
-                </label>
-                <input
-                  type="date"
-                  value={bookingData.endDate}
-                  onChange={(e) => setBookingData(prev => ({ ...prev, endDate: e.target.value }))}
-                  min={bookingData.startDate || new Date().toISOString().split('T')[0]}
-                  className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                />
-              </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      End Date
+                    </label>
+                    <input
+                      type="date"
+                      value={bookingData.endDate}
+                      onChange={(e) => setBookingData(prev => ({ ...prev, endDate: e.target.value }))}
+                      min={bookingData.startDate || new Date().toISOString().split('T')[0]}
+                      className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    />
+                  </div>
+                </>
+              )}
 
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -636,7 +643,8 @@ const BookingModal: React.FC<BookingModalProps> = ({
                 />
               </div>
 
-              {bookingData.totalDays > 0 && (
+              {/* RENT: Show rental calculation, SELL: Show price only */}
+              {itemType !== "SELL" && bookingData.totalDays > 0 && (
                 <div className="bg-gradient-to-r from-gray-50 to-blue-50 p-4 rounded-lg border border-blue-100">
                   <div className="space-y-2 text-sm">
                     <div className="flex justify-between">
@@ -665,12 +673,26 @@ const BookingModal: React.FC<BookingModalProps> = ({
                 </div>
               )}
 
+              {itemType === "SELL" && (
+                <div className="bg-gradient-to-r from-gray-50 to-blue-50 p-4 rounded-lg border border-blue-100 text-center">
+                  <div className="text-lg font-bold text-blue-700 mb-2">This item is for sale.</div>
+                  <div className="flex justify-between text-lg font-bold border-t pt-2">
+                    <span>Total Amount:</span>
+                    <span className="text-blue-600">₹{dailyRate.toLocaleString()}</span>
+                  </div>
+                </div>
+              )}
+
               <button
                 onClick={handleNext}
-                disabled={!bookingData.startDate || !bookingData.endDate || bookingData.totalDays <= 0}
+                disabled={
+                  itemType !== "SELL"
+                    ? (!bookingData.startDate || !bookingData.endDate || bookingData.totalDays <= 0)
+                    : false
+                }
                 className="w-full bg-gradient-to-r from-blue-600 to-purple-600 text-white py-3 px-4 rounded-lg font-medium hover:from-blue-700 hover:to-purple-700 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
               >
-                Proceed to Payment
+                {itemType === "SELL" ? "Proceed to Payment" : "Proceed to Payment"}
               </button>
             </div>
           )}
@@ -685,29 +707,37 @@ const BookingModal: React.FC<BookingModalProps> = ({
                     <span className="text-gray-600">Item:</span>
                     <span className="font-medium">{itemTitle}</span>
                   </div>
-                  <div className="flex justify-between">
-                    <span className="text-gray-600">Duration:</span>
-                    <span className="font-medium">{bookingData.totalDays}</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="text-gray-600">Dates:</span>
-                    <span className="font-medium">
-                      {format(new Date(bookingData.startDate), 'MMM dd')} - {format(new Date(bookingData.endDate), 'MMM dd, yyyy')}
-                    </span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="text-gray-600">Rental Amount:</span>
-                    <span className="font-medium">₹{(bookingData.totalDays * dailyRate).toLocaleString()}</span>
-                  </div>
-                  {securityDeposit > 0 && (
-                    <div className="flex justify-between">
-                      <span className="text-gray-600">Security Deposit:</span>
-                      <span className="font-medium">₹{securityDeposit.toLocaleString()}</span>
-                    </div>
+                  {itemType !== "SELL" && (
+                    <>
+                      <div className="flex justify-between">
+                        <span className="text-gray-600">Duration:</span>
+                        <span className="font-medium">{bookingData.totalDays}</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-gray-600">Dates:</span>
+                        <span className="font-medium">
+                          {format(new Date(bookingData.startDate), 'MMM dd')} - {format(new Date(bookingData.endDate), 'MMM dd, yyyy')}
+                        </span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-gray-600">Rental Amount:</span>
+                        <span className="font-medium">₹{(bookingData.totalDays * dailyRate).toLocaleString()}</span>
+                      </div>
+                      {securityDeposit > 0 && (
+                        <div className="flex justify-between">
+                          <span className="text-gray-600">Security Deposit:</span>
+                          <span className="font-medium">₹{securityDeposit.toLocaleString()}</span>
+                        </div>
+                      )}
+                    </>
                   )}
                   <div className="flex justify-between text-lg font-bold border-t pt-2">
                     <span>Total Amount:</span>
-                    <span className="text-blue-600">₹{bookingData.totalAmount.toLocaleString()}</span>
+                    <span className="text-blue-600">
+                      ₹{itemType === "SELL"
+                        ? dailyRate.toLocaleString()
+                        : bookingData.totalAmount.toLocaleString()}
+                    </span>
                   </div>
                 </div>
               </div>

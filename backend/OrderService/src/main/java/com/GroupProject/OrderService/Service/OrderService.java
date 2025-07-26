@@ -39,27 +39,37 @@ public class OrderService {
     public double calculateTotalAmount(List<String> itemIds, String couponCode) {
         try {
             logger.info("Calculating total amount for itemIds: {}", itemIds);
-            
+
             if (itemIds == null || itemIds.isEmpty()) {
                 throw new RuntimeException("Item IDs list cannot be null or empty");
             }
-            
+
             List<Item> foundItems = itemRepository.findAllById(itemIds);
             logger.info("Found {} items out of {} requested", foundItems.size(), itemIds.size());
-            
+
             if (foundItems.size() != itemIds.size()) {
                 logger.error("Some items not found. Requested: {}, Found: {}", itemIds.size(), foundItems.size());
                 throw new RuntimeException("One or more item IDs are invalid.");
             }
-            
-            double totalAmount = foundItems.stream().mapToDouble(Item::getPrice).sum();
+
+            double totalAmount = 0.0;
+            for (Item item : foundItems) {
+                if ("sell".equalsIgnoreCase(item.getType())) {
+                    // For sell, use the listed price directly
+                    totalAmount += item.getPrice();
+                } else {
+                    // For rent, you can add your calculation logic here (e.g., price * days *
+                    // quantity)
+                    totalAmount += item.getPrice(); // Default logic, update as needed
+                }
+            }
             logger.info("Total amount before discount: {}", totalAmount);
-            
+
             double finalAmount = applyDiscount(totalAmount, couponCode);
             logger.info("Final amount after discount: {}", finalAmount);
-            
+
             return finalAmount;
-            
+
         } catch (Exception e) {
             logger.error("Error calculating total amount: {}", e.getMessage(), e);
             throw new RuntimeException("Error calculating total amount: " + e.getMessage(), e);
@@ -69,32 +79,33 @@ public class OrderService {
     public double calculateRentalAmount(OrderRequest request) {
         try {
             logger.info("Calculating rental amount for rental request");
-            
+
             if (request.getStartDate() == null || request.getEndDate() == null) {
                 throw new RuntimeException("Start date and end date are required for rental calculation");
             }
-            
+
             if (request.getDailyRate() <= 0) {
                 throw new RuntimeException("Daily rate must be greater than 0");
             }
-            
+
             // Calculate rental days from dates
-            int rentalDays = (int) java.time.temporal.ChronoUnit.DAYS.between(request.getStartDate(), request.getEndDate());
+            int rentalDays = (int) java.time.temporal.ChronoUnit.DAYS.between(request.getStartDate(),
+                    request.getEndDate());
             if (rentalDays <= 0) {
                 throw new RuntimeException("Rental period must be at least 1 day");
             }
-            
+
             double dailyRate = request.getDailyRate();
             double securityDeposit = request.getSecurityDeposit();
-            
+
             double rentalAmount = rentalDays * dailyRate;
             double totalAmount = rentalAmount + securityDeposit;
-            
-            logger.info("Rental calculation: {} days × {} = {} + {} deposit = {}", 
-                       rentalDays, dailyRate, rentalAmount, securityDeposit, totalAmount);
-            
+
+            logger.info("Rental calculation: {} days × {} = {} + {} deposit = {}",
+                    rentalDays, dailyRate, rentalAmount, securityDeposit, totalAmount);
+
             return totalAmount;
-            
+
         } catch (Exception e) {
             logger.error("Error calculating rental amount: {}", e.getMessage(), e);
             throw new RuntimeException("Error calculating rental amount: " + e.getMessage(), e);
@@ -103,7 +114,7 @@ public class OrderService {
 
     public OrderEntity placeConfirmedOrder(OrderRequest request, String userId) {
         logger.info("Placing confirmed order for user: {}", userId);
-        
+
         List<Item> foundItems = itemRepository.findAllById(request.getItemIds());
         if (foundItems.size() != request.getItemIds().size()) {
             throw new RuntimeException("One or more item IDs are invalid.");
@@ -133,10 +144,10 @@ public class OrderService {
 
     public OrderEntity placeRentalOrder(OrderRequest request, String userId) {
         logger.info("Placing rental order for user: {}", userId);
-        
+
         // Calculate rental amount
         double totalAmount = calculateRentalAmount(request);
-        
+
         OrderEntity order = new OrderEntity();
         order.setOrderId(UUID.randomUUID().toString());
         order.setUserId(userId);
@@ -147,31 +158,31 @@ public class OrderService {
         order.setStatus("PLACED");
         order.setPaymentMode("ONLINE");
         order.setPaymentStatus("PAID");
-        
+
         // Store rental-specific information in order metadata
         order.setCouponCode("RENTAL"); // Mark as rental order
-        
+
         OrderEntity savedOrder = orderRepository.save(order);
         String orderId = savedOrder.getId() != null ? savedOrder.getId() : savedOrder.getOrderId();
         logger.info("Rental order placed successfully with ID: {}", orderId);
-        
+
         // Send rental confirmation emails
         sendRentalConfirmationEmail(savedOrder, request);
         return savedOrder;
     }
 
-    public OrderEntity placeOrderWithPaymentVerification(OrderRequest request, String userId, 
-                                                        String razorpayOrderId, String razorpayPaymentId, String razorpaySignature) {
+    public OrderEntity placeOrderWithPaymentVerification(OrderRequest request, String userId,
+            String razorpayOrderId, String razorpayPaymentId, String razorpaySignature) {
         logger.info("Placing order with payment verification for user: {}", userId);
-        
+
         // Verify payment first
         boolean paymentVerified = razorpayService.verifyPayment(razorpayOrderId, razorpayPaymentId, razorpaySignature);
-        
+
         if (!paymentVerified) {
             logger.error("Payment verification failed for order: {}", razorpayOrderId);
             throw new RuntimeException("Payment verification failed");
         }
-        
+
         // If payment is verified, place the order
         return placeConfirmedOrder(request, userId);
     }
@@ -240,7 +251,7 @@ public class OrderService {
             if (userId != null && userId.contains("@")) {
                 return userId;
             }
-            
+
             // Try to fetch from AuthService
             RestTemplate restTemplate = new RestTemplate();
             String url = "http://localhost:8081/auth/user?email=" + userId;
@@ -251,12 +262,12 @@ public class OrderService {
         } catch (Exception e) {
             logger.error("Failed to fetch user email from AuthService: {}", e.getMessage());
         }
-        
+
         // If userId is already an email, return it
         if (userId != null && userId.contains("@")) {
             return userId;
         }
-        
+
         // Return null instead of invalid userId to prevent email sending errors
         logger.warn("Could not determine valid email for userId: {}", userId);
         return null;
@@ -265,13 +276,14 @@ public class OrderService {
     private void sendOrderConfirmationEmail(OrderEntity order, List<Item> items) {
         try {
             String recipientEmail = getUserEmailFromAuthService(order.getUserId());
-            
+
             // Only send email if we have a valid email address
             if (recipientEmail == null || !recipientEmail.contains("@")) {
-                logger.warn("Skipping order confirmation email - no valid email address for user: {}", order.getUserId());
+                logger.warn("Skipping order confirmation email - no valid email address for user: {}",
+                        order.getUserId());
                 return;
             }
-            
+
             SimpleMailMessage message = new SimpleMailMessage();
             message.setFrom("vedantsalvi2353@gmail.com");
             message.setTo(recipientEmail);
@@ -308,7 +320,8 @@ public class OrderService {
                 renterSb.append("Your rental has been confirmed!\n\n");
                 renterSb.append("Order ID: ").append(order.getOrderId()).append("\n");
                 renterSb.append("Item: ").append(request.getItemTitle()).append("\n");
-                renterSb.append("Rental Period: ").append(request.getStartDate()).append(" to ").append(request.getEndDate()).append("\n");
+                renterSb.append("Rental Period: ").append(request.getStartDate()).append(" to ")
+                        .append(request.getEndDate()).append("\n");
                 renterSb.append("Daily Rate: Rs ").append(request.getDailyRate()).append("\n");
                 renterSb.append("Security Deposit: Rs ").append(request.getSecurityDeposit()).append("\n");
                 renterSb.append("Total Amount: Rs ").append(order.getTotalAmount()).append("\n");
@@ -332,7 +345,8 @@ public class OrderService {
                 ownerSb.append("Your item has been rented!\n\n");
                 ownerSb.append("Item: ").append(request.getItemTitle()).append("\n");
                 ownerSb.append("Rented by: ").append(request.getRenterEmail()).append("\n");
-                ownerSb.append("Rental Period: ").append(request.getStartDate()).append(" to ").append(request.getEndDate()).append("\n");
+                ownerSb.append("Rental Period: ").append(request.getStartDate()).append(" to ")
+                        .append(request.getEndDate()).append("\n");
                 ownerSb.append("Daily Rate: Rs ").append(request.getDailyRate()).append("\n");
                 ownerSb.append("Security Deposit: Rs ").append(request.getSecurityDeposit()).append("\n");
                 ownerSb.append("Total Amount: Rs ").append(order.getTotalAmount()).append("\n");
