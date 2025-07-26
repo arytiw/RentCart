@@ -22,6 +22,7 @@ interface UserContextType {
   setUser: (user: User | null) => void;
   setToken: (token: string | null) => void;
   logout: () => void;
+  refreshUser: () => Promise<void>;
 }
 
 const UserContext = createContext<UserContextType | undefined>(undefined);
@@ -35,8 +36,21 @@ export const UserProvider = ({ children }: { children: any }) => {
     if (storedToken) {
       setToken(storedToken);
       getCurrentUser(storedToken).then(userData => {
-        if (userData) setUser(userData);
-        else setUser(null);
+        if (userData) {
+          setUser(userData);
+        } else {
+          // Token might be expired, clear everything
+          setUser(null);
+          setToken(null);
+          localStorage.removeItem('authToken');
+          localStorage.removeItem('user');
+        }
+      }).catch(() => {
+        // Token validation failed, clear everything
+        setUser(null);
+        setToken(null);
+        localStorage.removeItem('authToken');
+        localStorage.removeItem('user');
       });
     } else {
       setUser(null);
@@ -58,6 +72,23 @@ export const UserProvider = ({ children }: { children: any }) => {
     }
   }, [user, token]);
 
+  const refreshUser = async () => {
+    const currentToken = token || localStorage.getItem('authToken');
+    if (currentToken) {
+      try {
+        const userData = await getCurrentUser(currentToken);
+        if (userData) {
+          setUser(userData);
+        } else {
+          logout();
+        }
+      } catch (error) {
+        console.error('Error refreshing user:', error);
+        logout();
+      }
+    }
+  };
+
   const logout = () => {
     setUser(null);
     setToken(null);
@@ -66,7 +97,7 @@ export const UserProvider = ({ children }: { children: any }) => {
   };
 
   return (
-    <UserContext.Provider value={{ user, setUser, token, setToken, logout }}>
+    <UserContext.Provider value={{ user, setUser, token, setToken, logout, refreshUser }}>
       {children}
     </UserContext.Provider>
   );

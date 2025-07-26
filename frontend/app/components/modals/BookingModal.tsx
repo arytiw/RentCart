@@ -5,6 +5,7 @@ import { toast } from 'react-hot-toast';
 import { useRouter } from 'next/navigation';
 import axios from 'axios';
 import { format } from 'date-fns';
+import { useUser } from '@/app/providers/UserProvider';
 
 interface BookingModalProps {
   isOpen: boolean;
@@ -51,6 +52,7 @@ const BookingModal: React.FC<BookingModalProps> = ({
   currentUser,
   securityDeposit = 0
 }) => {
+  const { token, user, refreshUser } = useUser(); // Get token, user, and refreshUser from UserProvider context
   const router = useRouter();
   const [step, setStep] = useState<'details' | 'payment' | 'success'>('details');
   const [isLoading, setIsLoading] = useState(false);
@@ -134,6 +136,21 @@ const BookingModal: React.FC<BookingModalProps> = ({
     }
   };
 
+  // Function to validate token with AuthService
+  const validateToken = async (token: string) => {
+    try {
+      const response = await axios.post('http://localhost:8081/auth/validate', {}, {
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      });
+      return response.status === 200;
+    } catch (error) {
+      console.error('Token validation failed:', error);
+      return false;
+    }
+  };
+
   const sendBookingEmails = async (orderData: any, renterEmail: string) => {
     try {
       // Get renter name from multiple sources
@@ -183,6 +200,7 @@ const BookingModal: React.FC<BookingModalProps> = ({
       // Debug: Log what we have
       console.log('=== BOOKING MODAL DEBUG ===');
       console.log('currentUser:', currentUser);
+      console.log('token from UserProvider:', token ? token.substring(0, 20) + '...' : 'No token from context');
       console.log('localStorage authToken:', localStorage.getItem('authToken'));
       console.log('localStorage token:', localStorage.getItem('token'));
       console.log('localStorage access_token:', localStorage.getItem('access_token'));
@@ -191,7 +209,8 @@ const BookingModal: React.FC<BookingModalProps> = ({
       console.log('localStorage user:', localStorage.getItem('user'));
       
       // Check authentication - try multiple sources
-      const authToken = localStorage.getItem('authToken') || 
+      const authToken = token || // Use token from UserProvider context first
+                       localStorage.getItem('authToken') || 
                        localStorage.getItem('token') || 
                        localStorage.getItem('accessToken') ||
                        localStorage.getItem('access_token') ||
@@ -200,7 +219,9 @@ const BookingModal: React.FC<BookingModalProps> = ({
       console.log('Resolved authToken:', authToken ? 'Present' : 'Missing');
       
       // Try to get user email from multiple sources
-      let userEmail = currentUser?.email || 
+      let userEmail = user?.email || 
+                      user?.emailId ||
+                      currentUser?.email || 
                       currentUser?.emailId;
       
       console.log('userEmail from currentUser:', userEmail);
@@ -229,6 +250,9 @@ const BookingModal: React.FC<BookingModalProps> = ({
       }
       
       console.log('Final resolved userEmail:', userEmail);
+      console.log('Final resolved authToken:', authToken ? authToken.substring(0, 20) + '...' : 'No token');
+      console.log('User from context:', user);
+      console.log('CurrentUser prop:', currentUser);
       
       // Fallback: if still no email but user is clearly logged in (visible in UI)
       // This is a temporary fix until we identify the localStorage issue
@@ -261,6 +285,28 @@ const BookingModal: React.FC<BookingModalProps> = ({
         setIsLoading(false);
         setPaymentStep('details');
         return;
+      }
+
+      // Validate the token with AuthService
+      let isTokenValid = await validateToken(authToken);
+      if (!isTokenValid) {
+        // Try to refresh user data first
+        console.log('Token validation failed, attempting to refresh user data...');
+        await refreshUser();
+        
+        // Get the updated token
+        const updatedToken = token || localStorage.getItem('authToken');
+        if (updatedToken && updatedToken !== authToken) {
+          console.log('Got updated token, validating again...');
+          isTokenValid = await validateToken(updatedToken);
+        }
+        
+        if (!isTokenValid) {
+          toast.error('Authentication token is invalid or expired. Please login again.');
+          setIsLoading(false);
+          setPaymentStep('details');
+          return;
+        }
       }
 
       if (!userEmail) {
