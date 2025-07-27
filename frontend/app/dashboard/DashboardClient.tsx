@@ -1,0 +1,414 @@
+"use client";
+
+import { toast } from "react-hot-toast";
+import axios from "axios";
+import { useCallback, useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
+
+import Heading from "@/app/components/Heading";
+import ListingCard from "@/app/components/listings/ListingCard";
+import Button from "@/app/components/Button";
+import useRentModal from "@/app/hooks/useRentModal";
+import getUserItems from "@/app/actions/getUserItems";
+import EmptyState from "@/app/components/EmptyState";
+import ClientOnly from "@/app/components/ClientOnly";
+import { useUser } from '@/app/providers/UserProvider';
+import { FaUser, FaEnvelope, FaPhone, FaBirthdayCake, FaVenusMars, FaUserTag, FaPlus, FaEdit, FaToggleOn, FaToggleOff, FaTrash, FaCalendarAlt, FaBox, FaChartLine } from "react-icons/fa";
+
+interface DashboardClientProps {
+  // No props required for now
+}
+
+const DashboardClient: React.FC<DashboardClientProps> = () => {
+  const router = useRouter();
+  const rentModal = useRentModal();
+  const { token, user: currentUser } = useUser();
+  const [deletingId, setDeletingId] = useState('');
+  const [loading, setLoading] = useState(true);
+  const [items, setItems] = useState<any[]>([]);
+  const [reservations, setReservations] = useState<any[]>([]);
+
+  useEffect(() => {
+    async function fetchData() {
+      console.log('Dashboard useEffect triggered');
+      console.log('Token exists:', !!token);
+      console.log('Current user:', currentUser);
+      
+      if (!token || !currentUser) {
+        console.log('Missing token or currentUser, stopping fetch');
+        setLoading(false);
+        return;
+      }
+      
+      setLoading(true);
+      
+      const userEmail = currentUser.email || currentUser.emailId;
+      console.log('User email for fetching items:', userEmail);
+      console.log('Current user object:', JSON.stringify(currentUser, null, 2));
+      
+      if (!userEmail) {
+        console.error('No email found for current user:', currentUser);
+        setLoading(false);
+        return;
+      }
+      
+      try {
+        console.log('About to call getUserItems with email:', userEmail);
+        const userItems = await getUserItems(userEmail);
+        console.log('getUserItems returned:', userItems);
+        console.log('Number of items found:', userItems.length);
+        setItems(userItems);
+        
+        // Fetch reservations with proper authorization header
+        const res = await fetch('/api/reservations', {
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json'
+          }
+        });
+        
+        if (res.ok) {
+          const reservationsData = await res.json();
+          setReservations(reservationsData);
+        } else {
+          console.error('Failed to fetch reservations:', res.status);
+          setReservations([]);
+        }
+      } catch (error) {
+        console.error('Error fetching data:', error);
+        setItems([]);
+        setReservations([]);
+      } finally {
+        setLoading(false);
+      }
+    }
+    fetchData();
+  }, [token, currentUser]);
+
+  const onDelete = useCallback((id: string) => {
+    setDeletingId(id);
+    axios.delete(`/api/items/${id}`, {
+      headers: {
+        'Authorization': `Bearer ${token || localStorage.getItem('authToken')}`
+      }
+    })
+      .then(() => {
+        toast.success('Item deleted successfully');
+        setItems(items.filter(item => item.id !== id));
+      })
+      .catch(() => {
+        toast.error('Something went wrong.')
+      })
+      .finally(() => {
+        setDeletingId('');
+      })
+  }, [items, token]);
+
+  const onEdit = useCallback((id: string) => {
+    router.push(`/dashboard/edit/${id}`);
+  }, [router]);
+
+  const onToggleAvailability = useCallback((id: string, currentStatus: boolean) => {
+    axios.put(`/api/items/${id}`, {
+      available: !currentStatus
+    }, {
+      headers: {
+        'Authorization': `Bearer ${token || localStorage.getItem('authToken')}`
+      }
+    })
+      .then(() => {
+        toast.success(`Item ${!currentStatus ? 'made available' : 'made unavailable'}`);
+        setItems(items.map(item => 
+          item.id === id ? { ...item, available: !currentStatus } : item
+        ));
+      })
+      .catch(() => {
+        toast.error('Something went wrong.')
+      })
+  }, [items, token]);
+
+  if (loading) {
+    return (
+      <div className="py-20 min-h-screen bg-gradient-to-br from-gray-50 to-white flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-16 w-16 border-b-2 border-alibaba-orange mx-auto mb-4"></div>
+          <p className="text-xl font-semibold text-alibaba-black">Loading your dashboard...</p>
+          <p className="text-alibaba-gray-600 mt-2">Fetching your latest data</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (!currentUser) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-gray-50 to-white">
+        <ClientOnly>
+          <EmptyState title="Unauthorized" subtitle="Please login to access your dashboard" />
+        </ClientOnly>
+      </div>
+    );
+  }
+
+  return (
+    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-white">
+      {/* Header Section */}
+      <div className="bg-alibaba-gray-50 shadow-sm border-b border-alibaba-gray-200">
+        <div className="max-w-7xl mx-auto px-6 py-8">
+          <div className="flex items-center justify-between">
+            <div>
+              <h1 className="text-3xl font-bold text-alibaba-black">
+                Welcome back, {currentUser?.firstName || currentUser?.name || 'User'}!
+              </h1>
+              <p className="text-alibaba-gray-600 mt-2">Manage your profile, listings, and bookings from here</p>
+            </div>
+            <div className="hidden md:flex items-center space-x-4">
+              <div className="text-center px-4 py-2 bg-alibaba-orange/10 rounded-lg">
+                <div className="text-2xl font-bold text-alibaba-orange">{items.length}</div>
+                <div className="text-sm text-alibaba-gray-600">Listed Items</div>
+              </div>
+              <div className="text-center px-4 py-2 bg-alibaba-gray-100 rounded-lg">
+                <div className="text-2xl font-bold text-alibaba-black">{reservations.length}</div>
+                <div className="text-sm text-alibaba-gray-600">Bookings</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div className="max-w-7xl mx-auto px-6 py-8 space-y-8">
+        {/* User Profile Section */}
+        <div className="bg-white rounded-2xl shadow-xl overflow-hidden transform hover:scale-[1.01] transition-transform duration-300">
+          <div className="bg-gradient-to-r from-alibaba-orange to-orange-600 px-8 py-6">
+            <div className="flex items-center space-x-4">
+              <div className="w-16 h-16 bg-white/20 rounded-full flex items-center justify-center">
+                <FaUser className="text-2xl text-white" />
+              </div>
+              <div>
+                <h2 className="text-2xl font-bold text-white">Profile Information</h2>
+                <p className="text-orange-100">Your account details and settings</p>
+              </div>
+            </div>
+          </div>
+          
+          <div className="p-8">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+              <div className="space-y-6">
+                <div className="flex items-center space-x-3 p-4 bg-gray-50 rounded-xl hover:bg-gray-100 transition-colors">
+                  <FaUser className="text-alibaba-orange text-lg" />
+                  <div className="flex-1">
+                    <label className="block text-sm font-semibold text-gray-700">Full Name</label>
+                    <div className="text-gray-900 text-lg">
+                      {currentUser?.firstName && currentUser?.lastName 
+                        ? `${currentUser.firstName} ${currentUser.lastName}`
+                        : currentUser?.name || 'Not provided'
+                      }
+                    </div>
+                  </div>
+                </div>
+                
+                <div className="flex items-center space-x-3 p-4 bg-gray-50 rounded-xl hover:bg-gray-100 transition-colors">
+                  <FaUserTag className="text-alibaba-orange text-lg" />
+                  <div className="flex-1">
+                    <label className="block text-sm font-semibold text-gray-700">Username</label>
+                    <div className="text-gray-900 text-lg">{currentUser?.username || 'Not provided'}</div>
+                  </div>
+                </div>
+                
+                <div className="flex items-center space-x-3 p-4 bg-gray-50 rounded-xl hover:bg-gray-100 transition-colors">
+                  <FaEnvelope className="text-alibaba-orange text-lg" />
+                  <div className="flex-1">
+                    <label className="block text-sm font-semibold text-gray-700">Email</label>
+                    <div className="text-gray-900 text-lg">{currentUser?.email || currentUser?.emailId || 'Not provided'}</div>
+                  </div>
+                </div>
+              </div>
+              
+              <div className="space-y-6">
+                <div className="flex items-center space-x-3 p-4 bg-gray-50 rounded-xl hover:bg-gray-100 transition-colors">
+                  <FaPhone className="text-alibaba-orange text-lg" />
+                  <div className="flex-1">
+                    <label className="block text-sm font-semibold text-gray-700">Phone Number</label>
+                    <div className="text-gray-900 text-lg">{currentUser?.phoneNumber || 'Not provided'}</div>
+                  </div>
+                </div>
+                
+                <div className="flex items-center space-x-3 p-4 bg-gray-50 rounded-xl hover:bg-gray-100 transition-colors">
+                  <FaVenusMars className="text-alibaba-orange text-lg" />
+                  <div className="flex-1">
+                    <label className="block text-sm font-semibold text-gray-700">Gender</label>
+                    <div className="text-gray-900 text-lg">{currentUser?.gender || 'Not provided'}</div>
+                  </div>
+                </div>
+                
+                <div className="flex items-center space-x-3 p-4 bg-gray-50 rounded-xl hover:bg-gray-100 transition-colors">
+                  <FaBirthdayCake className="text-alibaba-orange text-lg" />
+                  <div className="flex-1">
+                    <label className="block text-sm font-semibold text-gray-700">Date of Birth</label>
+                    <div className="text-gray-900 text-lg">{currentUser?.dateOfBirth || 'Not provided'}</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* My Listed Items */}
+        <div className="bg-white rounded-2xl shadow-xl overflow-hidden transform hover:scale-[1.01] transition-transform duration-300">
+          <div className="bg-gradient-to-r from-green-600 to-emerald-600 px-8 py-6">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center space-x-4">
+                <div className="w-16 h-16 bg-white/20 rounded-full flex items-center justify-center">
+                  <FaBox className="text-2xl text-white" />
+                </div>
+                <div>
+                  <h2 className="text-2xl font-bold text-white">My Listed Items</h2>
+                  <p className="text-green-100">
+                    You have {items.length} item{items.length !== 1 ? 's' : ''} listed for sale/rent
+                  </p>
+                </div>
+              </div>
+              <button
+                onClick={rentModal.onOpen}
+                className="bg-white/20 hover:bg-white/30 text-white px-6 py-3 rounded-xl font-semibold flex items-center space-x-2 transition-all duration-200 hover:scale-105"
+              >
+                <FaPlus className="text-lg" />
+                <span>Add New Item</span>
+              </button>
+            </div>
+          </div>
+          
+          <div className="p-8">
+            {items.length === 0 ? (
+              <div className="text-center py-12">
+                <div className="w-24 h-24 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-6">
+                  <FaBox className="text-3xl text-gray-400" />
+                </div>
+                <h3 className="text-xl font-semibold text-gray-700 mb-2">No items listed yet</h3>
+                <p className="text-gray-500 mb-6">Start earning by listing your first item for rent or sale</p>
+                <button
+                  onClick={rentModal.onOpen}
+                  className="bg-gradient-to-r from-green-600 to-emerald-600 text-white px-8 py-3 rounded-xl font-semibold hover:shadow-lg transition-all duration-200 hover:scale-105"
+                >
+                  List Your First Item
+                </button>
+              </div>
+            ) : (
+              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+                {items.map((item: any) => (
+                  <div key={item.id} className="relative group">
+                    <div className="transform group-hover:scale-105 transition-transform duration-200">
+                      <ListingCard
+                        data={item}
+                        currentUser={currentUser as any}
+                      />
+                    </div>
+                    
+                    {/* Action Buttons Overlay */}
+                    <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity duration-200 rounded-xl flex items-center justify-center">
+                      <div className="flex flex-col gap-2 p-4">
+                        <button
+                          onClick={() => onEdit(item.id)}
+                          className="bg-white text-alibaba-black px-4 py-3 rounded-lg font-semibold flex items-center space-x-2 hover:bg-alibaba-gray-100 hover:shadow-lg transform hover:scale-105 transition-all duration-200 border-2 border-alibaba-gray-200"
+                        >
+                          <FaEdit />
+                          <span>Edit</span>
+                        </button>
+                        <button
+                          onClick={() => onToggleAvailability(item.id, item.available)}
+                          className={`px-4 py-3 rounded-lg font-semibold flex items-center space-x-2 transition-all duration-200 hover:shadow-lg transform hover:scale-105 border-2 ${
+                            item.available 
+                              ? 'bg-alibaba-orange hover:bg-alibaba-orange-dark text-white border-alibaba-orange hover:border-alibaba-orange-dark' 
+                              : 'bg-green-500 hover:bg-green-600 text-white border-green-500 hover:border-green-600'
+                          }`}
+                        >
+                          {item.available ? <FaToggleOff /> : <FaToggleOn />}
+                          <span>{item.available ? "Disable" : "Enable"}</span>
+                        </button>
+                        <button
+                          onClick={() => onDelete(item.id)}
+                          disabled={deletingId === item.id}
+                          className="bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded-lg font-semibold flex items-center space-x-2 transition-colors disabled:opacity-50"
+                        >
+                          <FaTrash />
+                          <span>{deletingId === item.id ? 'Deleting...' : 'Delete'}</span>
+                        </button>
+                      </div>
+                    </div>
+                    
+                    {/* Status Badges */}
+                    <div className="absolute top-3 right-3 flex flex-col gap-2">
+                      <div className={`
+                        px-3 py-1 rounded-full text-xs font-bold shadow-lg
+                        ${item.available 
+                          ? 'bg-green-500 text-white' 
+                          : 'bg-red-500 text-white'
+                        }
+                      `}>
+                        {item.available ? 'Available' : 'Unavailable'}
+                      </div>
+                      <div className="px-3 py-1 rounded-full text-xs font-bold bg-blue-500 text-white shadow-lg">
+                        {item.type || 'RENT'}
+                      </div>
+                      <div className="px-3 py-1 rounded-full text-xs font-bold bg-orange-500 text-white shadow-lg">
+                        Qty: {item.quantity || 1}
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        </div>
+
+        {/* Rental Bookings */}
+        <div className="bg-white rounded-2xl shadow-xl overflow-hidden transform hover:scale-[1.01] transition-transform duration-300">
+          <div className="bg-gradient-to-r from-blue-600 to-indigo-600 px-8 py-6">
+            <div className="flex items-center space-x-4">
+              <div className="w-16 h-16 bg-white/20 rounded-full flex items-center justify-center">
+                <FaCalendarAlt className="text-2xl text-white" />
+              </div>
+              <div>
+                <h2 className="text-2xl font-bold text-white">Rental Bookings</h2>
+                <p className="text-blue-100">
+                  {reservations.length} booking{reservations.length !== 1 ? 's' : ''} on your items
+                </p>
+              </div>
+            </div>
+          </div>
+          
+          <div className="p-8">
+            {reservations.length === 0 ? (
+              <div className="text-center py-12">
+                <div className="w-24 h-24 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-6">
+                  <FaCalendarAlt className="text-3xl text-gray-400" />
+                </div>
+                <h3 className="text-xl font-semibold text-gray-700 mb-2">No bookings yet</h3>
+                <p className="text-gray-500 mb-2">When someone books your items, they will appear here.</p>
+                <p className="text-sm text-gray-400">Make sure your items are available and attractively priced!</p>
+              </div>
+            ) : (
+              <div className="space-y-4">
+                {reservations.map((reservation: any, index: number) => (
+                  <div key={index} className="border-2 border-gray-100 hover:border-blue-200 rounded-xl p-6 transition-colors hover:bg-blue-50">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <h4 className="font-semibold text-gray-800">Booking #{index + 1}</h4>
+                        <p className="text-gray-600 mt-1">Details will be available soon</p>
+                      </div>
+                      <div className="text-right">
+                        <div className="text-sm text-gray-500">Status</div>
+                        <div className="font-semibold text-blue-600">Pending Setup</div>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+export default DashboardClient; 
