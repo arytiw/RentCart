@@ -1,19 +1,18 @@
 "use client";
 
-import qs from "query-string";
+import queryString from "query-string";
 import dynamic from "next/dynamic";
 import { useCallback, useMemo, useState } from "react";
 import { Range } from "react-date-range";
 import { formatISO } from "date-fns";
 import { useRouter, useSearchParams } from "next/navigation";
 
-import useSearchModal from "@/app/hooks/useSearchModal";
-
-import Modal from "./Modal";
-import Calendar from "../inputs/Calendar";
-import Counter from "../inputs/Counter";
-import CountrySelect, { CountrySelectValue } from "../inputs/CountrySelect";
-import Heading from "../Heading";
+import Calendar from "@/app/components/inputs/Calendar";
+import Counter from "@/app/components/inputs/Counter";
+import LocationInput, { LocationValue } from "@/app/components/inputs/CountrySelect";
+import Heading from "@/app/components/Heading";
+import Container from "@/app/components/Container";
+import Button from "@/app/components/Button";
 
 enum STEPS {
   LOCATION = 0,
@@ -21,14 +20,12 @@ enum STEPS {
   INFO = 2,
 }
 
-const SearchModal = () => {
+const SearchPage = () => {
   const router = useRouter();
-  const searchModal = useSearchModal();
   const params = useSearchParams();
 
   const [step, setStep] = useState(STEPS.LOCATION);
-
-  const [location, setLocation] = useState<CountrySelectValue>();
+  const [location, setLocation] = useState<LocationValue>();
   const [itemCount, setitemCount] = useState(1);
   const [dateRange, setDateRange] = useState<Range>({
     startDate: new Date(),
@@ -38,7 +35,7 @@ const SearchModal = () => {
 
   const Map = useMemo(
     () =>
-      dynamic(() => import("../Map"), {
+      dynamic(() => import("@/app/components/Map"), {
         ssr: false,
       }),
     [location]
@@ -60,7 +57,7 @@ const SearchModal = () => {
     let currentQuery = {};
 
     if (params) {
-      currentQuery = qs.parse(params.toString());
+      currentQuery = queryString.parse(params.toString());
     }
 
     const updatedQuery: any = {
@@ -77,7 +74,7 @@ const SearchModal = () => {
       updatedQuery.endDate = formatISO(dateRange.endDate);
     }
 
-    const url = qs.stringifyUrl(
+    const url = queryString.stringifyUrl(
       {
         url: "/",
         query: updatedQuery,
@@ -86,11 +83,9 @@ const SearchModal = () => {
     );
 
     setStep(STEPS.LOCATION);
-    searchModal.onClose();
     router.push(url);
   }, [
     step,
-    searchModal,
     location,
     router,
     itemCount,
@@ -118,15 +113,15 @@ const SearchModal = () => {
   let bodyContent = (
     <div className="flex flex-col gap-8">
       <Heading
-        title="Where do you want the item?"
-        subtitle="Enter your location!"
+        title="Where do you want to find items?"
+        subtitle="Find the perfect location!"
       />
-      <CountrySelect
+      <LocationInput
         value={location}
-        onChange={(value) => setLocation(value as CountrySelectValue)}
+        onChange={(value: LocationValue) => setLocation(value)}
       />
       <hr />
-      <Map center={location?.latlng} />
+      <Map center={undefined} />
     </div>
   );
 
@@ -134,8 +129,8 @@ const SearchModal = () => {
     bodyContent = (
       <div className="flex flex-col gap-8">
         <Heading
-          title="When do you want the item?"
-          subtitle="Select your time period!"
+          title="When do you need the item?"
+          subtitle="Make sure to pick your dates!"
         />
         <Calendar
           onChange={(value) => setDateRange(value.selection)}
@@ -148,30 +143,54 @@ const SearchModal = () => {
   if (step === STEPS.INFO) {
     bodyContent = (
       <div className="flex flex-col gap-8">
-        <Heading title="More information" subtitle="Find your perfect place!" />
+        <Heading
+          title="More information"
+          subtitle="Find your perfect item!"
+        />
         <Counter
           onChange={(value) => setitemCount(value)}
           value={itemCount}
-          title="Units"
-          subtitle="How many units do you want?"
+          title="Item Count"
+          subtitle="How many items do you need?"
         />
-        <hr />
       </div>
     );
   }
 
   return (
-    <Modal
-      isOpen={searchModal.isOpen}
-      title="Filters"
-      actionLabel={actionLabel}
-      onSubmit={onSubmit}
-      secondaryActionLabel={secondaryActionLabel}
-      secondaryAction={step === STEPS.LOCATION ? undefined : onBack}
-      onClose={searchModal.onClose}
-      body={bodyContent}
-    />
+    <Container>
+      <div className="max-w-2xl mx-auto py-8">
+        <div className="bg-white rounded-lg border border-gray-200 shadow-lg p-8">
+          <div className="text-center mb-8">
+            <h1 className="text-3xl font-bold text-gray-900 mb-2">
+              Search Items
+            </h1>
+            <p className="text-gray-600">
+              Find exactly what you're looking for
+            </p>
+          </div>
+
+          <div className="space-y-6">
+            {bodyContent}
+            
+            <div className="flex flex-row gap-4 pt-6">
+              {secondaryActionLabel && (
+                <Button
+                  outline
+                  label={secondaryActionLabel}
+                  onClick={onBack}
+                />
+              )}
+              <Button
+                label={actionLabel}
+                onClick={onSubmit}
+              />
+            </div>
+          </div>
+        </div>
+      </div>
+    </Container>
   );
 };
 
-export default SearchModal;
+export default SearchPage;

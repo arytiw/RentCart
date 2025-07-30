@@ -6,15 +6,11 @@ import { AiOutlineMenu } from "react-icons/ai";
 import { signOut } from "next-auth/react";
 import { useRouter } from "next/navigation";
 
-import useLoginModal from "@/app/hooks/useLoginModal";
-import useRegisterModal from "@/app/hooks/useRegisterModal";
-import useRentModal from "@/app/hooks/useRentModal";
 import { SafeUser } from "@/app/types";
 import { useUser } from '@/app/providers/UserProvider';
 
 import MenuItem from "./MenuItem";
 import Avatar from "../Avatar";
-import ChangePasswordModal from '../modals/ChangePasswordModal';
 
 interface UserMenuProps {
   currentUser?: SafeUser | null;
@@ -22,12 +18,8 @@ interface UserMenuProps {
 
 const UserMenu: React.FC = () => {
   const router = useRouter();
-  const loginModal = useLoginModal();
-  const registerModal = useRegisterModal();
-  const rentModal = useRentModal();
   const { user, logout } = useUser();
   const [isOpen, setIsOpen] = useState(false);
-  const [showChangePassword, setShowChangePassword] = useState(false);
 
   const toggleOpen = useCallback(() => {
     setIsOpen((value) => !value);
@@ -35,10 +27,11 @@ const UserMenu: React.FC = () => {
 
   const onRent = useCallback(() => {
     if (!user) {
-      return loginModal.onOpen();
+      router.push('/auth/login');
+      return;
     }
-    rentModal.onOpen();
-  }, [loginModal, rentModal, user]);
+    router.push('/listings/new');
+  }, [router, user]);
 
   return (
     <div className="relative">
@@ -136,25 +129,20 @@ const UserMenu: React.FC = () => {
                   label="My favorites"
                   onClick={() => router.push("/favorites")}
                 />
-                <MenuItem label="Rent your stuff" onClick={rentModal.onOpen} />
-                <MenuItem label="Change Password" onClick={() => setShowChangePassword(true)} />
+                <MenuItem label="Rent your stuff" onClick={() => router.push("/listings/new")} />
+                <MenuItem label="Change Password" onClick={() => router.push("/auth/change-password")} />
                 <hr className="border-alibaba-gray-200" />
                 <MenuItem label="Logout" onClick={logout} />
               </>
             ) : (
               <>
-                <MenuItem label="Login" onClick={loginModal.onOpen} />
-                <MenuItem label="Sign up" onClick={registerModal.onOpen} />
+                <MenuItem label="Login" onClick={() => router.push("/auth/login")} />
+                <MenuItem label="Sign up" onClick={() => router.push("/auth/register")} />
               </>
             )}
           </div>
         </div>
       )}
-      <ChangePasswordModal
-        isOpen={showChangePassword}
-        onClose={() => setShowChangePassword(false)}
-        email={user?.emailId || ''}
-      />
     </div>
   );
 };

@@ -2,7 +2,6 @@ import Container from "@/app/components/Container";
 import ListingCard from "@/app/components/listings/ListingCard";
 import EmptyState from "@/app/components/EmptyState";
 import CategoriesSection from "@/app/components/CategoriesSection";
-import { FaShoppingCart } from "react-icons/fa";
 
 import getListings from "@/app/actions/getListings";
 import getCurrentUser from "@/app/actions/getCurrentUser";
@@ -22,23 +21,10 @@ const Home = async () => {
 
   return (
     <ClientOnly>
-      {/* Enhanced Background with Gradient and Cart Icon */}
+      {/* Enhanced Background with Gradient */}
       <div className="relative min-h-screen">
         {/* Main Gradient Background */}
         <div className="absolute inset-0 bg-gradient-to-br from-white via-alibaba-gray-50 to-alibaba-orange/5"></div>
-        
-        {/* Large Cart Icon Background */}
-        <div className="absolute inset-0 overflow-hidden pointer-events-none">
-          <div className="absolute top-20 right-10 opacity-5">
-            <FaShoppingCart size={400} className="text-alibaba-orange" />
-          </div>
-          <div className="absolute bottom-40 left-10 opacity-3">
-            <FaShoppingCart size={300} className="text-alibaba-orange" />
-          </div>
-          <div className="absolute top-1/2 left-1/3 opacity-4">
-            <FaShoppingCart size={250} className="text-alibaba-orange" />
-          </div>
-        </div>
         
         {/* Subtle Pattern Overlay */}
         <div className="absolute inset-0 bg-[radial-gradient(circle_at_1px_1px,rgba(255,106,0,0.03)_1px,transparent_0)] bg-[length:20px_20px]"></div>
@@ -206,7 +192,7 @@ const Home = async () => {
               <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6 gap-6">
                 {listings.map((listing: any) => (
                   <ListingCard
-                    currentUser={currentUser}
+                    currentUser={currentUser as any}
                     key={listing.id}
                     data={listing}
                   />

@@ -7,7 +7,6 @@ import { Range } from "react-date-range";
 import { useRouter } from "next/navigation";
 import { differenceInDays, eachDayOfInterval } from "date-fns";
 
-import useLoginModal from "@/app/hooks/useLoginModal";
 import { SafeListing, SafeReservation, SafeUser } from "@/app/types";
 
 import Container from "@/app/components/Container";
@@ -35,7 +34,6 @@ const ListingClient: React.FC<ListingClientProps> = ({
   reservations = [],
   currentUser,
 }) => {
-  const loginModal = useLoginModal();
   const router = useRouter();
 
   const disabledDates = useMemo(() => {
@@ -63,7 +61,8 @@ const ListingClient: React.FC<ListingClientProps> = ({
 
   const onCreateReservation = useCallback(() => {
     if (!currentUser) {
-      return loginModal.onOpen();
+      router.push('/auth/login');
+      return;
     }
     setIsLoading(true);
 
@@ -85,7 +84,7 @@ const ListingClient: React.FC<ListingClientProps> = ({
       .finally(() => {
         setIsLoading(false);
       });
-  }, [totalPrice, dateRange, listing?.id, router, currentUser, loginModal]);
+  }, [totalPrice, dateRange, listing?.id, router, currentUser]);
 
   useEffect(() => {
     if (dateRange.startDate && dateRange.endDate) {

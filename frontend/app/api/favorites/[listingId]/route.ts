@@ -22,12 +22,14 @@ export async function POST(
       return NextResponse.json({ error: 'Invalid ID' }, { status: 400 });
     }
 
-    // For favorites, we'll return success since this is handled client-side
-    // The actual favorite management is done in the frontend using localStorage
+    // For now, we'll simulate success since this would typically
+    // update the user's favoriteIds in the database
+    // In a real implementation, this would call the auth service to update the user
     return NextResponse.json({ 
       success: true, 
       message: 'Favorite added successfully',
-      listingId 
+      listingId,
+      userId: currentUser.id
     });
   } catch (error) {
     console.error('Error adding favorite:', error);
@@ -55,12 +57,13 @@ export async function DELETE(
       return NextResponse.json({ error: 'Invalid ID' }, { status: 400 });
     }
 
-    // For favorites, we'll return success since this is handled client-side
-    // The actual favorite management is done in the frontend using localStorage
+    // For now, we'll simulate success since this would typically
+    // remove the listingId from user's favoriteIds in the database
     return NextResponse.json({ 
       success: true, 
       message: 'Favorite removed successfully',
-      listingId 
+      listingId,
+      userId: currentUser.id
     });
   } catch (error) {
     console.error('Error removing favorite:', error);

@@ -65,6 +65,34 @@ const Navbar: React.FC<NavbarProps> = ({
               Browse Items
             </a>
             <a 
+              href="/favorites" 
+              className="
+                hidden 
+                md:block 
+                text-sm 
+                font-semibold 
+                py-2
+                px-5 
+                rounded-lg
+                text-white
+                bg-alibaba-black
+                border-2
+                border-white
+                hover:bg-alibaba-gray-800
+                hover:border-alibaba-gray-800
+                hover:shadow-lg
+                transform
+                hover:scale-105
+                transition-all
+                duration-200
+                cursor-pointer
+                shadow-md
+                hover:shadow-xl
+              "
+            >
+              ♥️ Favorites
+            </a>
+            <a 
               href="/support-chat" 
               className="
                 hidden 

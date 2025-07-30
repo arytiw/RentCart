@@ -1,16 +1,31 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  experimental: {
-    appDir: true,
-  },
   images: {
-    domains: [
-      'res.cloudinary.com', 
-      'avatars.githubusercontent.com',
-      'lh3.googleusercontent.com',
-      'images-cdn.ubuy.co.in',
-      'encrypted-tbn0.gstatic.com',
-      'cdn3.evostore.io'
+    remotePatterns: [
+      {
+        protocol: 'https',
+        hostname: 'res.cloudinary.com',
+      },
+      {
+        protocol: 'https',
+        hostname: 'avatars.githubusercontent.com',
+      },
+      {
+        protocol: 'https',
+        hostname: 'lh3.googleusercontent.com',
+      },
+      {
+        protocol: 'https',
+        hostname: 'images-cdn.ubuy.co.in',
+      },
+      {
+        protocol: 'https',
+        hostname: 'encrypted-tbn0.gstatic.com',
+      },
+      {
+        protocol: 'https',
+        hostname: 'cdn3.evostore.io',
+      }
     ]
   }
 }

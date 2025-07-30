@@ -9,10 +9,9 @@ import Heading from "@/app/components/Heading";
 import Image from "next/image";
 import HeartButton from "@/app/components/HeartButton";
 import Button from "@/app/components/Button";
-import useBookingModal from "@/app/hooks/useBookingModal";
-import BookingModal from "@/app/components/modals/BookingModal";
 import ReviewSection from "@/app/components/ReviewSection";
 import DynamicRating from "@/app/components/DynamicRating";
+import { useRouter } from "next/navigation";
 
 interface ItemClientProps {
   item: any;
@@ -24,12 +23,29 @@ const ItemClient: React.FC<ItemClientProps> = ({
   currentUser,
 }) => {
   const { getByValue } = useCountries();
-  const bookingModal = useBookingModal();
+  const router = useRouter();
   // Handle location display - use direct location string if available
   const locationDisplay = item.locationValue || "Location not specified";
   const category = useMemo(() => {
     return categories.find((items) => items.label === item.category);
   }, [item.category]);
+
+  const handleBooking = () => {
+    if (!currentUser) {
+      router.push('/auth/login');
+      return;
+    }
+    
+    const bookingParams = new URLSearchParams({
+      itemId: item.id,
+      itemTitle: item.title,
+      dailyRate: item.price.toString(),
+      ownerEmail: item.user?.emailId || '',
+      securityDeposit: (item.securityDeposit || 0).toString()
+    });
+    
+    router.push(`/bookings/new?${bookingParams.toString()}`);
+  };
 
   return (
     <Container>
@@ -167,7 +183,7 @@ const ItemClient: React.FC<ItemClientProps> = ({
                   <Button
                     disabled={!item.available || (item.quantity || 1) <= 0}
                     label={!item.available ? "Not Available" : (item.quantity || 1) <= 0 ? "Out of Stock" : "Book Now"}
-                    onClick={bookingModal.onOpen}
+                    onClick={handleBooking}
                   />
                 </div>
               </div>
@@ -175,17 +191,6 @@ const ItemClient: React.FC<ItemClientProps> = ({
           </div>
         </div>
       </div>
-      
-      <BookingModal
-        isOpen={bookingModal.isOpen}
-        onClose={bookingModal.onClose}
-        itemId={item.id}
-        itemTitle={item.title}
-        dailyRate={item.price}
-        ownerEmail={item.userId}
-        currentUser={currentUser}
-        securityDeposit={item.securityDeposit}
-      />
     </Container>
   );
 };

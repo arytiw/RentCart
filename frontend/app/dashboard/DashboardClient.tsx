@@ -8,7 +8,6 @@ import { useRouter } from "next/navigation";
 import Heading from "@/app/components/Heading";
 import ListingCard from "@/app/components/listings/ListingCard";
 import Button from "@/app/components/Button";
-import useRentModal from "@/app/hooks/useRentModal";
 import getUserItems from "@/app/actions/getUserItems";
 import EmptyState from "@/app/components/EmptyState";
 import ClientOnly from "@/app/components/ClientOnly";
@@ -21,7 +20,6 @@ interface DashboardClientProps {
 
 const DashboardClient: React.FC<DashboardClientProps> = () => {
   const router = useRouter();
-  const rentModal = useRentModal();
   const { token, user: currentUser } = useUser();
   const [deletingId, setDeletingId] = useState('');
   const [loading, setLoading] = useState(true);
@@ -268,7 +266,7 @@ const DashboardClient: React.FC<DashboardClientProps> = () => {
                 </div>
               </div>
               <button
-                onClick={rentModal.onOpen}
+                onClick={() => router.push('/listings/new')}
                 className="bg-white/20 hover:bg-white/30 text-white px-6 py-3 rounded-xl font-semibold flex items-center space-x-2 transition-all duration-200 hover:scale-105"
               >
                 <FaPlus className="text-lg" />
@@ -286,7 +284,7 @@ const DashboardClient: React.FC<DashboardClientProps> = () => {
                 <h3 className="text-xl font-semibold text-gray-700 mb-2">No items listed yet</h3>
                 <p className="text-gray-500 mb-6">Start earning by listing your first item for rent or sale</p>
                 <button
-                  onClick={rentModal.onOpen}
+                  onClick={() => router.push('/listings/new')}
                   className="bg-gradient-to-r from-green-600 to-emerald-600 text-white px-8 py-3 rounded-xl font-semibold hover:shadow-lg transition-all duration-200 hover:scale-105"
                 >
                   List Your First Item
