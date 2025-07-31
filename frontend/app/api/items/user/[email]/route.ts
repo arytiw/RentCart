@@ -7,6 +7,8 @@ export async function GET(
   try {
     const email = decodeURIComponent(params.email);
     console.log("Fetching items for user email:", email);
+    console.log("Email type:", typeof email);
+    console.log("Email length:", email?.length);
     
     const response = await fetch(`http://localhost:9091/items/user/${encodeURIComponent(email)}`, {
       method: 'GET',

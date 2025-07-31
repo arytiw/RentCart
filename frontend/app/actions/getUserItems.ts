@@ -3,6 +3,8 @@ import { buildUrl, apiClient, API_CONFIG } from '../config/api';
 export default async function getUserItems(userEmail: string) {
   try {
     console.log('getUserItems called with email:', userEmail);
+    console.log('Email type:', typeof userEmail);
+    console.log('Email length:', userEmail?.length);
     
     const url = buildUrl('ITEM_SERVICE', API_CONFIG.ENDPOINTS.USER_ITEMS(encodeURIComponent(userEmail)));
     console.log('Making request to ItemService:', url);

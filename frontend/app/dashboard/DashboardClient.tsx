@@ -45,6 +45,13 @@ const DashboardClient: React.FC<DashboardClientProps> = () => {
       const userEmail = currentUser.email || currentUser.emailId;
       console.log('User email for fetching items:', userEmail);
       console.log('Current user object:', JSON.stringify(currentUser, null, 2));
+      console.log('Available user fields:', {
+        email: currentUser.email,
+        emailId: currentUser.emailId,
+        username: currentUser.username,
+        firstName: currentUser.firstName,
+        lastName: currentUser.lastName
+      });
       
       if (!userEmail) {
         console.error('No email found for current user:', currentUser);

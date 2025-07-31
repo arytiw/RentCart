@@ -43,25 +43,30 @@ export async function POST(request: Request) {
     if (!userData) {
       console.error("Token validation failed");
       
-      // For debugging: allow creation with a default user if token validation fails
-      console.log("Using fallback user data for debugging");
-      finalUserData = {
-        emailId: "test@example.com",
-        username: "testuser",
-        firstName: "Test",
-        lastName: "User"
-      };
-      
-      // Uncomment the line below to bypass token validation for testing
-      // return NextResponse.json({ error: "Invalid or expired token" }, { status: 401 });
-      
-      console.log("Using fallback user data:", finalUserData);
+      // Try to extract user email from the token itself or request headers
+      const userEmail = request.headers.get('x-user-email');
+      if (userEmail) {
+        console.log("Using user email from request header:", userEmail);
+        finalUserData = {
+          emailId: userEmail,
+          username: userEmail.split('@')[0],
+          firstName: userEmail.split('@')[0],
+          lastName: "User"
+        };
+      } else {
+        console.error("No user email found in headers, cannot create item");
+        return NextResponse.json(
+          { error: "User authentication failed. Please login again." },
+          { status: 401 }
+        );
+      }
     } else {
       finalUserData = userData;
       console.log("Using validated user data:", finalUserData);
     }
 
     console.log("User data from token:", finalUserData);
+    console.log("User email being used for item creation:", finalUserData.emailId);
 
     const body = await request.json();
     const {

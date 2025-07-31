@@ -406,6 +406,17 @@ const BookingModal: React.FC<BookingModalProps> = ({
               const orderData = confirmResponse.data.order;
               setCompletedBooking(orderData);
               
+              // Store rental details in localStorage for review page
+              const rentalDetails = {
+                startDate: bookingData.startDate,
+                endDate: bookingData.endDate,
+                dailyRate: dailyRate,
+                securityDeposit: securityDeposit,
+                itemTitle: itemTitle,
+                notes: bookingData.notes
+              };
+              localStorage.setItem(`rental_${orderData.orderId}`, JSON.stringify(rentalDetails));
+              
               // Mark item as booked
               await axios.put(`/api/items/${itemId}/book`, {
                 booked: true,
@@ -487,6 +498,17 @@ const BookingModal: React.FC<BookingModalProps> = ({
             if (confirmResponse.data.order) {
               const orderData = confirmResponse.data.order;
               setCompletedBooking(orderData);
+              
+              // Store rental details in localStorage for review page
+              const rentalDetails = {
+                startDate: bookingData.startDate,
+                endDate: bookingData.endDate,
+                dailyRate: dailyRate,
+                securityDeposit: securityDeposit,
+                itemTitle: itemTitle,
+                notes: bookingData.notes
+              };
+              localStorage.setItem(`rental_${orderData.orderId}`, JSON.stringify(rentalDetails));
               
               // Mark item as booked
               await axios.put(`/api/items/${itemId}/book`, {
@@ -770,12 +792,27 @@ const BookingModal: React.FC<BookingModalProps> = ({
                   <p className="text-gray-600 mb-6">
                     Your booking has been confirmed. You will receive an email confirmation shortly.
                   </p>
-                  <button
-                    onClick={handleGoToDashboard}
-                    className="w-full bg-gradient-to-r from-blue-600 to-purple-600 text-white py-3 px-4 rounded-lg font-medium hover:from-blue-700 hover:to-purple-700 transition-all"
-                  >
-                    Go to Dashboard
-                  </button>
+                  <div className="space-y-3">
+                    <button
+                      onClick={() => {
+                        handleClose();
+                        if (completedBooking?.orderId) {
+                          router.push(`/review/${completedBooking.orderId}`);
+                        } else {
+                          router.push('/dashboard');
+                        }
+                      }}
+                      className="w-full bg-gradient-to-r from-green-600 to-blue-600 text-white py-3 px-4 rounded-lg font-medium hover:from-green-700 hover:to-blue-700 transition-all"
+                    >
+                      Write a Review
+                    </button>
+                    <button
+                      onClick={handleGoToDashboard}
+                      className="w-full bg-gray-200 text-gray-800 py-3 px-4 rounded-lg font-medium hover:bg-gray-300 transition-colors"
+                    >
+                      Go to Dashboard
+                    </button>
+                  </div>
                 </div>
               )}
             </div>

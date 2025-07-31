@@ -34,7 +34,7 @@ enum STEPS {
 const RentModal = () => {
   const router = useRouter();
   const rentModal = useRentModal();
-  const { token } = useUser();
+  const { token, user: currentUser } = useUser();
   const [description, setDescription] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [step, setStep] = useState(STEPS.CATEGORY);
@@ -93,8 +93,17 @@ const RentModal = () => {
     const currentDescription = watch("description");
     const currentUsagePolicy = watch("usagePolicy");
     const currentImageSrc = watch("imageSrc");
+    const currentCategory = watch("category");
+    const currentPrice = watch("price");
 
     switch (step) {
+      case STEPS.CATEGORY:
+        // Check if category is selected
+        if (!currentCategory || currentCategory.trim() === "") {
+          return true;
+        }
+        break;
+        
       case STEPS.LOCATION:
         // Check if location exists and is valid (no validation errors would be shown)
         if (!currentLocation || !currentLocation.label || !currentLocation.label.trim()) {
@@ -147,6 +156,13 @@ const RentModal = () => {
         }
         break;
       
+      case STEPS.PRICE:
+        // Check if price is valid
+        if (!currentPrice || currentPrice <= 0) {
+          return true;
+        }
+        break;
+      
       default:
         return false;
     }
@@ -158,6 +174,11 @@ const RentModal = () => {
   };
 
   const onNext = () => {
+    // Validate current step before proceeding
+    if (hasCurrentStepErrors()) {
+      toast.error("Please fix the errors in the current step before proceeding");
+      return;
+    }
     setStep((value) => value + 1);
   };
 
@@ -195,7 +216,7 @@ const RentModal = () => {
       description: data.description,
       price: data.price,
       category: data.category,
-      location: data.location?.value || data.location,
+      location: data.location?.label || data.location?.value || data.location,
       images: data.imageSrc ? [data.imageSrc] : [],
       features: features,
       usagePolicy: data.usagePolicy || "",
@@ -204,12 +225,38 @@ const RentModal = () => {
       quantity: data.quantity || 1
     };
 
+    console.log("Raw form data:", data);
     console.log("Sending item data:", itemData);
+    console.log("Current user email being sent:", currentUser?.email || currentUser?.emailId || '');
+    
+    // Debug: Check each required field
+    console.log("Title:", data.title, "Type:", typeof data.title);
+    console.log("Description:", data.description, "Type:", typeof data.description);
+    console.log("Price:", data.price, "Type:", typeof data.price);
+    console.log("Category:", data.category, "Type:", typeof data.category);
+    console.log("Location:", data.location, "Type:", typeof data.location);
+    console.log("Location value:", data.location?.value, "Type:", typeof data.location?.value);
+
+    // Validate required fields before sending
+    const missingFields = [];
+    if (!data.title || data.title.trim() === '') missingFields.push('title');
+    if (!data.description || data.description.trim() === '') missingFields.push('description');
+    if (!data.price || data.price <= 0) missingFields.push('price');
+    if (!data.category || data.category.trim() === '') missingFields.push('category');
+    if (!data.location || (!data.location.label && !data.location.value && !data.location)) missingFields.push('location');
+    
+    if (missingFields.length > 0) {
+      console.error("Missing required fields:", missingFields);
+      toast.error(`Missing required fields: ${missingFields.join(', ')}`);
+      setIsLoading(false);
+      return;
+    }
 
     axios
       .post("/api/items", itemData, {
         headers: {
-          'Authorization': `Bearer ${authToken}`
+          'Authorization': `Bearer ${authToken}`,
+          'X-USER-EMAIL': currentUser?.email || currentUser?.emailId || ''
         }
       })
       .then((response) => {
@@ -331,6 +378,12 @@ const RentModal = () => {
           </div>
         ))}
       </div>
+      
+      {step === STEPS.CATEGORY && hasCurrentStepErrors() && (
+        <div className="mt-4 p-3 bg-red-100 border border-red-300 rounded-lg text-red-700 text-sm">
+          Please select a category to continue
+        </div>
+      )}
     </div>
   );
 
@@ -353,6 +406,12 @@ const RentModal = () => {
             placeholder="e.g., Mumbai, Maharashtra or Bandra West, Mumbai"
           />
         </div>
+        
+        {step === STEPS.LOCATION && hasCurrentStepErrors() && (
+          <div className="mt-4 p-3 bg-red-100 border border-red-300 rounded-lg text-red-700 text-sm">
+            Please enter a valid location to continue
+          </div>
+        )}
       </div>
     );
   }
@@ -404,6 +463,12 @@ const RentModal = () => {
             </div>
           )}
         </div>
+        
+        {step === STEPS.IMAGES && hasCurrentStepErrors() && (
+          <div className="mt-4 p-3 bg-red-100 border border-red-300 rounded-lg text-red-700 text-sm">
+            Please upload at least one photo to continue
+          </div>
+        )}
       </div>
     );
   }
@@ -458,6 +523,12 @@ const RentModal = () => {
             validationType="usagePolicy"
           />
         </div>
+        
+        {step === STEPS.DESCRIPTION && hasCurrentStepErrors() && (
+          <div className="mt-4 p-3 bg-red-100 border border-red-300 rounded-lg text-red-700 text-sm">
+            Please fill in all required fields correctly. Title must be 5-50 characters, description must be 10-150 words.
+          </div>
+        )}
       </div>
     );
   }
@@ -602,6 +673,12 @@ const RentModal = () => {
             </div>
           </div>
         </div>
+        
+        {step === STEPS.PRICE && hasCurrentStepErrors() && (
+          <div className="mt-4 p-3 bg-red-100 border border-red-300 rounded-lg text-red-700 text-sm">
+            Please enter a valid price (greater than 0) to continue
+          </div>
+        )}
       </div>
     );
   }

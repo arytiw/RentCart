@@ -34,6 +34,11 @@ public class ItemController {
     @PostMapping
     public ResponseEntity<Item> addItem(@RequestBody Item item, @RequestHeader("X-USER-ID") String userId) {
         try {
+            logger.info("Received item creation request");
+            logger.info("User ID from header: {}", userId);
+            logger.info("User ID type: {}", userId.getClass().getSimpleName());
+            logger.info("User ID length: {}", userId.length());
+            
             item.setUserId(userId);
             logger.info("Adding item: {} by user: {}", item.getTitle(), userId);
             
@@ -56,6 +61,8 @@ public class ItemController {
             
             Item savedItem = itemRepo.save(item);
             logger.info("Item saved successfully with ID: {}", savedItem.getId());
+            logger.info("Saved item user ID: {}", savedItem.getUserId());
+            logger.info("Saved item title: {}", savedItem.getTitle());
             return ResponseEntity.ok(savedItem);
         } catch (Exception e) {
             logger.error("Error adding item: {}", e.getMessage());
@@ -115,7 +122,17 @@ public class ItemController {
     public ResponseEntity<List<Item>> getItemsByUser(@PathVariable String userId) {
         try {
             logger.info("Fetching items posted by user: {}", userId);
+            logger.info("User ID type: {}", userId.getClass().getSimpleName());
+            logger.info("User ID length: {}", userId.length());
+            
             List<Item> items = itemRepo.findByUserId(userId);
+            logger.info("Found {} items for user: {}", items.size(), userId);
+            
+            // Log each item for debugging
+            for (Item item : items) {
+                logger.info("Item: ID={}, Title={}, UserId={}", item.getId(), item.getTitle(), item.getUserId());
+            }
+            
             return ResponseEntity.ok(items);
         } catch (Exception e) {
             logger.error("Error fetching items by user: {}", e.getMessage());
