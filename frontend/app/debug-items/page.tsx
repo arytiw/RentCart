@@ -1,107 +1,97 @@
 "use client";
 
-import { useState } from 'react';
-import { useUser } from '@/app/providers/UserProvider';
-import axios from 'axios';
+import { useEffect, useState } from "react";
+import { buildUrl, apiClient, API_CONFIG } from '../config/api';
 
-export default function DebugItemsPage() {
-  const { token, user: currentUser } = useUser();
-  const [debugInfo, setDebugInfo] = useState<any>(null);
-  const [loading, setLoading] = useState(false);
+const DebugItemsPage = () => {
+  const [items, setItems] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
-  const testItemService = async () => {
-    setLoading(true);
-    try {
-      const response = await fetch('/api/debug/items');
-      const data = await response.json();
-      setDebugInfo(data);
-    } catch (error) {
-      console.error('Debug test failed:', error);
-      setDebugInfo({ error: 'Debug test failed', details: error });
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const createTestItem = async () => {
-    if (!currentUser?.email || !currentUser?.emailId) {
-      alert('No user email found');
-      return;
-    }
-
-    setLoading(true);
-    try {
-      const testItem = {
-        title: "Debug Test Item",
-        description: "This is a test item created for debugging purposes",
-        price: 150,
-        category: "Electronics",
-        location: "Mumbai",
-        images: [],
-        features: ["Test feature"],
-        usagePolicy: "Test usage policy",
-        securityDeposit: 50,
-        type: "RENT",
-        quantity: 1
-      };
-
-      const response = await axios.post('/api/items', testItem, {
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'X-USER-EMAIL': currentUser.email || currentUser.emailId
+  useEffect(() => {
+    const fetchItems = async () => {
+      try {
+        setLoading(true);
+        setError(null);
+        
+        console.log("API_CONFIG:", API_CONFIG);
+        const url = buildUrl('ITEM_SERVICE', API_CONFIG.ENDPOINTS.ITEMS);
+        console.log("Fetching from URL:", url);
+        
+        const response = await fetch(url);
+        console.log("Response status:", response.status);
+        console.log("Response headers:", response.headers);
+        
+        if (!response.ok) {
+          throw new Error(`HTTP error! status: ${response.status}`);
         }
-      });
+        
+        const data = await response.json();
+        console.log("Raw items data:", data);
+        
+        setItems(data);
+      } catch (err: any) {
+        console.error("Error fetching items:", err);
+        setError(err.message);
+      } finally {
+        setLoading(false);
+      }
+    };
 
-      console.log('Test item created:', response.data);
-      alert('Test item created successfully!');
-    } catch (error: any) {
-      console.error('Failed to create test item:', error);
-      alert(`Failed to create test item: ${error.response?.data?.error || error.message}`);
-    } finally {
-      setLoading(false);
-    }
-  };
+    fetchItems();
+  }, []);
 
   return (
     <div className="container mx-auto p-8">
-      <h1 className="text-3xl font-bold mb-6">Debug Items Page</h1>
+      <h1 className="text-3xl font-bold mb-6">Debug Items API</h1>
       
-      <div className="mb-6">
-        <h2 className="text-xl font-semibold mb-4">Current User Info</h2>
-        <pre className="bg-gray-100 p-4 rounded">
-          {JSON.stringify(currentUser, null, 2)}
-        </pre>
+      <div className="mb-6 p-4 bg-gray-100 rounded">
+        <h2 className="text-xl font-semibold mb-2">API Configuration</h2>
+        <pre className="text-sm">{JSON.stringify(API_CONFIG, null, 2)}</pre>
       </div>
 
-      <div className="mb-6">
-        <h2 className="text-xl font-semibold mb-4">Actions</h2>
-        <div className="space-x-4">
-          <button
-            onClick={testItemService}
-            disabled={loading}
-            className="bg-blue-500 text-white px-4 py-2 rounded disabled:opacity-50"
-          >
-            {loading ? 'Testing...' : 'Test ItemService Connection'}
-          </button>
-          
-          <button
-            onClick={createTestItem}
-            disabled={loading || !currentUser}
-            className="bg-green-500 text-white px-4 py-2 rounded disabled:opacity-50"
-          >
-            {loading ? 'Creating...' : 'Create Test Item'}
-          </button>
+      {loading && (
+        <div className="text-center py-8">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500 mx-auto"></div>
+          <p className="mt-4">Loading items...</p>
         </div>
-      </div>
+      )}
 
-      {debugInfo && (
-        <div className="mb-6">
-          <h2 className="text-xl font-semibold mb-4">Debug Results</h2>
-          <pre className="bg-gray-100 p-4 rounded overflow-auto">
-            {JSON.stringify(debugInfo, null, 2)}
-          </pre>
+      {error && (
+        <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-6">
+          <strong>Error:</strong> {error}
+        </div>
+      )}
+
+      {!loading && !error && (
+        <div>
+          <h2 className="text-2xl font-bold mb-4">Items ({items.length})</h2>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            {items.map((item: any, index: number) => (
+              <div key={item.id || index} className="border p-4 rounded">
+                <h3 className="font-bold">{item.title || 'No Title'}</h3>
+                <p className="text-sm text-gray-600">{item.description || 'No Description'}</p>
+                <p className="text-sm">Price: ₹{item.price || 0}</p>
+                <p className="text-sm">Category: {item.category || 'No Category'}</p>
+                <p className="text-sm">Available: {item.available ? 'Yes' : 'No'}</p>
+                <p className="text-sm">Quantity: {item.quantity || 1}</p>
+                <p className="text-sm">User ID: {item.userId || 'No User'}</p>
+                <pre className="text-xs mt-2 bg-gray-100 p-2 rounded overflow-auto">
+                  {JSON.stringify(item, null, 2)}
+                </pre>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {!loading && !error && items.length === 0 && (
+        <div className="text-center py-8">
+          <p className="text-gray-600">No items found</p>
         </div>
       )}
     </div>
   );
-} 
+};
+
+export default DebugItemsPage; 

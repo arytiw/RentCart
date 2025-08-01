@@ -21,7 +21,26 @@ const ItemsPage = async ({ searchParams }: ItemsPageProps) => {
   if (!listings || listings.length === 0) {
     return (
       <ClientOnly>
-        <EmptyState showReset />
+        <Container>
+          <div className="pt-24 pb-10">
+            <Heading
+              title="No Items Available"
+              subtitle="There are currently no items available for rent."
+            />
+          </div>
+          <div className="text-center py-20">
+            <div className="max-w-md mx-auto">
+              <h3 className="text-xl font-semibold text-gray-700 mb-4">Be the first to list an item!</h3>
+              <p className="text-gray-500 mb-8">Start earning by listing your items for rent.</p>
+              <a
+                href="/dashboard"
+                className="bg-alibaba-orange text-white px-8 py-3 rounded-xl font-semibold hover:bg-alibaba-orange-dark transition-colors"
+              >
+                List Your First Item
+              </a>
+            </div>
+          </div>
+        </Container>
       </ClientOnly>
     );
   }

@@ -28,6 +28,7 @@ import com.GroupProject.OrderService.Dto.RazorpayRequestDTO;
 import com.GroupProject.OrderService.Entity.OrderEntity;
 import com.GroupProject.OrderService.Service.OrderService;
 import com.GroupProject.OrderService.Service.RazorpayService;
+import com.GroupProject.OrderService.Service.PDFService;
 import com.GroupProject.OrderService.Util.UserAuthUtil;
 
 import jakarta.servlet.http.HttpServletRequest;
@@ -41,14 +42,16 @@ public class OrderController {
     private final OrderService orderService;
     private final RazorpayService razorpayService;
     private final UserAuthUtil userAuthUtil;
+    private final PDFService pdfService;
 
     @Autowired
     private JavaMailSender mailSender;
 
-    public OrderController(OrderService orderService, RazorpayService razorpayService, UserAuthUtil userAuthUtil) {
+    public OrderController(OrderService orderService, RazorpayService razorpayService, UserAuthUtil userAuthUtil, PDFService pdfService) {
         this.orderService = orderService;
         this.razorpayService = razorpayService;
         this.userAuthUtil = userAuthUtil;
+        this.pdfService = pdfService;
     }
 
     @GetMapping("/test")
@@ -443,5 +446,55 @@ public class OrderController {
     public ResponseEntity<OrderEntity> updateOrder(@PathVariable String orderId, @RequestBody OrderRequest request) {
         logger.info("Received request to update order with ID: {}", orderId);
         return ResponseEntity.ok(orderService.updateOrder(orderId, request));
+    }
+
+    @GetMapping("/{orderId}/receipt")
+    public ResponseEntity<?> downloadReceipt(@PathVariable String orderId, Principal principal, HttpServletRequest httpRequest) {
+        try {
+            String userEmail = httpRequest.getHeader("X-USER-EMAIL");
+            String authToken = httpRequest.getHeader("Authorization");
+            
+            // Get user email using the utility
+            String userId = userAuthUtil.getUserEmail(userEmail, authToken, principal);
+            if (userId == null) {
+                Map<String, String> errorResponse = new HashMap<>();
+                errorResponse.put("error", "User authentication failed. Please login again.");
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(errorResponse);
+            }
+            
+            logger.info("Downloading receipt for order: {} by user: {}", orderId, userId);
+            
+            // Get the order
+            OrderEntity order = orderService.getOrderById(orderId);
+            
+            // Verify the order belongs to the user
+            if (!order.getUserId().equals(userId)) {
+                Map<String, String> errorResponse = new HashMap<>();
+                errorResponse.put("error", "You are not authorized to download this receipt.");
+                return ResponseEntity.status(HttpStatus.FORBIDDEN).body(errorResponse);
+            }
+            
+            // Get the items for this order
+            List<com.GroupProject.OrderService.Entity.Item> items = orderService.getItemRepository().findAllById(order.getItemIds());
+            
+            // Get customer name and email
+            String customerName = orderService.getUserNameFromAuthService(userId);
+            String customerEmail = orderService.getUserEmailFromAuthService(userId);
+            
+            // Generate receipt
+            byte[] receiptBytes = pdfService.generateReceiptPDF(order, items, customerName, customerEmail);
+            
+            // Return the receipt as a downloadable file
+            return ResponseEntity.ok()
+                .header("Content-Disposition", "attachment; filename=\"receipt_" + orderId + ".txt\"")
+                .header("Content-Type", "text/plain")
+                .body(receiptBytes);
+                
+        } catch (Exception e) {
+            logger.error("Error downloading receipt for order {}: {}", orderId, e.getMessage(), e);
+            Map<String, String> errorResponse = new HashMap<>();
+            errorResponse.put("error", "Failed to download receipt: " + e.getMessage());
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(errorResponse);
+        }
     }
 }

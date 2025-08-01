@@ -1,92 +1,49 @@
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
+import { buildUrl, API_CONFIG } from '../../config/api';
 
-export async function GET() {
+export async function GET(request: NextRequest) {
   try {
-    console.log("Testing ItemService connection...");
+    console.log("Debug API: Testing ItemService connection...");
     
-    // Test 1: Check if ItemService is reachable
-    const testResponse = await fetch('http://localhost:9091/items', {
+    const url = buildUrl('ITEM_SERVICE', API_CONFIG.ENDPOINTS.ITEMS);
+    console.log("Debug API: URL:", url);
+    
+    const response = await fetch(url, {
       method: 'GET',
       headers: {
         'Content-Type': 'application/json',
       },
-      cache: 'no-store'
     });
     
-    console.log("ItemService test response status:", testResponse.status);
+    console.log("Debug API: Response status:", response.status);
+    console.log("Debug API: Response headers:", Object.fromEntries(response.headers.entries()));
     
-    if (!testResponse.ok) {
-      const errorText = await testResponse.text();
-      console.error("ItemService test failed:", errorText);
+    if (!response.ok) {
+      const errorText = await response.text();
+      console.error("Debug API: Error response:", errorText);
       return NextResponse.json({
-        error: "ItemService not reachable",
-        status: testResponse.status,
-        details: errorText
-      }, { status: 500 });
+        error: `ItemService returned ${response.status}`,
+        details: errorText,
+        url: url
+      }, { status: response.status });
     }
     
-    const items = await testResponse.json();
-    console.log("All items from ItemService:", items);
-    
-    // Test 2: Check if we can create a test item
-    const testItem = {
-      title: "Test Item",
-      description: "This is a test item for debugging",
-      price: 100,
-      category: "Electronics",
-      location: "Mumbai",
-      images: [],
-      features: [],
-      usagePolicy: "",
-      securityDeposit: 0,
-      type: "RENT",
-      quantity: 1,
-      available: true
-    };
-    
-    const createResponse = await fetch('http://localhost:9091/items', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'X-USER-ID': 'test@example.com'
-      },
-      body: JSON.stringify(testItem)
-    });
-    
-    console.log("Create test item response status:", createResponse.status);
-    
-    if (createResponse.ok) {
-      const createdItem = await createResponse.json();
-      console.log("Test item created:", createdItem);
-      
-      // Test 3: Check if we can fetch items by user
-      const userItemsResponse = await fetch('http://localhost:9091/items/user/test@example.com', {
-        method: 'GET',
-        headers: {
-          'Content-Type': 'application/json',
-        }
-      });
-      
-      console.log("User items response status:", userItemsResponse.status);
-      
-      if (userItemsResponse.ok) {
-        const userItems = await userItemsResponse.json();
-        console.log("User items:", userItems);
-      }
-    }
+    const data = await response.json();
+    console.log("Debug API: Success response:", data);
     
     return NextResponse.json({
       success: true,
-      message: "ItemService is working",
-      allItems: items,
-      testItemCreated: createResponse.ok
+      itemCount: Array.isArray(data) ? data.length : 0,
+      items: data,
+      url: url
     });
     
   } catch (error: any) {
-    console.error("Debug test failed:", error);
+    console.error("Debug API: Exception:", error);
     return NextResponse.json({
-      error: "Debug test failed",
-      details: error.message
+      error: "Failed to connect to ItemService",
+      details: error.message,
+      stack: error.stack
     }, { status: 500 });
   }
 } 

@@ -5,6 +5,7 @@ import { useCallback, useMemo } from "react";
 import { format } from "date-fns";
 import axios from "axios";
 import { toast } from "react-hot-toast";
+import { FaDownload } from "react-icons/fa";
 
 import { SafeUser } from "@/app/types";
 
@@ -119,6 +120,35 @@ const OrderCard: React.FC<OrderCardProps> = ({
             }}
           />
         )}
+        
+        {/* Download Receipt button */}
+        <Button
+          label="Download Receipt"
+          small
+          icon={FaDownload}
+          onClick={async (e) => {
+            e.stopPropagation();
+            try {
+              const response = await axios.get(`/api/orders/${data.id}/receipt`, {
+                responseType: 'blob'
+              });
+              
+              // Create a download link
+              const url = window.URL.createObjectURL(new Blob([response.data]));
+              const link = document.createElement('a');
+              link.href = url;
+              link.setAttribute('download', `receipt_${data.orderId}.txt`);
+              document.body.appendChild(link);
+              link.click();
+              link.remove();
+              window.URL.revokeObjectURL(url);
+              
+              toast.success('Receipt downloaded successfully');
+            } catch (err: any) {
+              toast.error('Failed to download receipt');
+            }
+          }}
+        />
       </div>
     </div>
   );

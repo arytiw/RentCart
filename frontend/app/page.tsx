@@ -9,13 +9,28 @@ import getCurrentUser from "@/app/actions/getCurrentUser";
 import ClientOnly from "./components/ClientOnly";
 
 const Home = async () => {
+  console.log("Home page: Starting to fetch data...");
   const listings = await getListings();
+  console.log("Home page: Fetched listings:", listings?.length || 0);
   const currentUser = await getCurrentUser();
+  console.log("Home page: Fetched current user:", currentUser?.email);
 
   if (!listings || listings.length === 0) {
+    console.log("Home page: No listings found, showing empty state");
     return (
       <ClientOnly>
-        <EmptyState showReset />
+        <div className="min-h-screen bg-gradient-to-br from-gray-50 to-white flex items-center justify-center">
+          <div className="text-center">
+            <h1 className="text-3xl font-bold text-alibaba-black mb-4">No Items Available</h1>
+            <p className="text-alibaba-gray-600 mb-8">There are currently no items available for rent.</p>
+            <a
+              href="/dashboard"
+              className="bg-alibaba-orange text-white px-8 py-3 rounded-xl font-semibold hover:bg-alibaba-orange-dark transition-colors"
+            >
+              List Your First Item
+            </a>
+          </div>
+        </div>
       </ClientOnly>
     );
   }

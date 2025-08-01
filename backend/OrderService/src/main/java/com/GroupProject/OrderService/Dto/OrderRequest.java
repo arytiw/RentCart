@@ -8,6 +8,7 @@ public class OrderRequest {
     private String address;
     private String couponCode;   // New: optional
     private String paymentMode;  // New: required
+    private String transactionId; // New: Razorpay payment ID
     
     // Rental-specific fields
     private LocalDate startDate;
@@ -78,6 +79,14 @@ public class OrderRequest {
 
     public void setPaymentMode(String paymentMode) {
         this.paymentMode = paymentMode;
+    }
+
+    public String getTransactionId() {
+        return transactionId;
+    }
+
+    public void setTransactionId(String transactionId) {
+        this.transactionId = transactionId;
     }
 
     public LocalDate getStartDate() {

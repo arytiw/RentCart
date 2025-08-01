@@ -75,10 +75,14 @@ public class ItemController {
         try {
             logger.info("Fetching all items");
             List<Item> items = itemRepo.findAll();
-            // Filter out items with zero quantity
+            logger.info("Found {} total items", items.size());
+            
+            // Filter out items with zero quantity and unavailable items
             List<Item> availableItems = items.stream()
-                .filter(item -> item.getQuantity() > 0)
+                .filter(item -> item.getQuantity() > 0 && item.getAvailable() != false)
                 .collect(Collectors.toList());
+            
+            logger.info("Returning {} available items", availableItems.size());
             return ResponseEntity.ok(availableItems);
         } catch (Exception e) {
             logger.error("Error fetching items: {}", e.getMessage());

@@ -1,7 +1,4 @@
 import { NextRequest, NextResponse } from "next/server";
-import axios from "axios";
-
-const ORDER_SERVICE_URL = process.env.ORDER_SERVICE_URL || "http://localhost:8083";
 
 export async function GET(
   request: NextRequest,
@@ -10,7 +7,6 @@ export async function GET(
   try {
     const orderId = params.orderId;
     const authToken = request.headers.get("Authorization");
-    const userEmail = request.headers.get("x-user-email");
 
     if (!authToken) {
       return NextResponse.json(
@@ -19,19 +15,12 @@ export async function GET(
       );
     }
 
-    if (!userEmail) {
-      return NextResponse.json(
-        { error: "User email required" },
-        { status: 401 }
-      );
-    }
-
     // Forward the request to the backend OrderService
-    const response = await fetch(`${ORDER_SERVICE_URL}/orders/${orderId}`, {
+    const backendUrl = process.env.ORDER_SERVICE_URL || "http://localhost:8083";
+    const response = await fetch(`${backendUrl}/orders/${orderId}/receipt`, {
       method: "GET",
       headers: {
         "Authorization": authToken,
-        "X-USER-EMAIL": userEmail,
         "Content-Type": "application/json",
       },
     });
@@ -39,16 +28,25 @@ export async function GET(
     if (!response.ok) {
       const errorData = await response.json();
       return NextResponse.json(
-        { error: errorData.error || "Failed to fetch order" },
+        { error: errorData.error || "Failed to download receipt" },
         { status: response.status }
       );
     }
 
-    const orderData = await response.json();
-    return NextResponse.json(orderData);
+    // Get the receipt data as blob
+    const receiptData = await response.blob();
+
+    // Return the receipt as a downloadable file
+    return new NextResponse(receiptData, {
+      status: 200,
+      headers: {
+        "Content-Disposition": `attachment; filename="receipt_${orderId}.txt"`,
+        "Content-Type": "text/plain",
+      },
+    });
 
   } catch (error) {
-    console.error("Error fetching order:", error);
+    console.error("Error downloading receipt:", error);
     return NextResponse.json(
       { error: "Internal server error" },
       { status: 500 }

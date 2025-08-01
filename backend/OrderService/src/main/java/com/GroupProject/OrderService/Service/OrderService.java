@@ -36,6 +36,9 @@ public class OrderService {
     @Autowired
     private JavaMailSender mailSender;
 
+    @Autowired
+    private PDFService pdfService;
+
     public double calculateTotalAmount(List<String> itemIds, String couponCode) {
         try {
             logger.info("Calculating total amount for itemIds: {}", itemIds);
@@ -123,11 +126,14 @@ public class OrderService {
         order.setPaymentMode(request.getPaymentMode());
         order.setPaymentStatus("PAID");
         order.setCouponCode(request.getCouponCode());
+        order.setTransactionId(request.getTransactionId()); // Set transaction ID from request
 
         OrderEntity savedOrder = orderRepository.save(order);
         String orderId = savedOrder.getId() != null ? savedOrder.getId() : savedOrder.getOrderId();
         logger.info("Order placed successfully with ID: {}", orderId);
-        sendOrderConfirmationEmail(savedOrder, foundItems);
+        
+        // Send email with PDF receipt
+        sendOrderConfirmationEmailWithReceipt(savedOrder, foundItems);
         return savedOrder;
     }
 
@@ -171,6 +177,9 @@ public class OrderService {
             logger.error("Payment verification failed for order: {}", razorpayOrderId);
             throw new RuntimeException("Payment verification failed");
         }
+        
+        // Set the transaction ID from Razorpay payment ID
+        request.setTransactionId(razorpayPaymentId);
         
         // If payment is verified, place the order
         return placeConfirmedOrder(request, userId);
@@ -227,6 +236,10 @@ public class OrderService {
         return orderRepository.save(order);
     }
 
+    public ItemRepository getItemRepository() {
+        return itemRepository;
+    }
+
     private double applyDiscount(double totalAmount, String couponCode) {
         if (couponCode != null && couponCode.equalsIgnoreCase("SAVE10")) {
             return totalAmount * 0.9;
@@ -234,7 +247,7 @@ public class OrderService {
         return totalAmount;
     }
 
-    private String getUserEmailFromAuthService(String userId) {
+    public String getUserEmailFromAuthService(String userId) {
         try {
             // If userId looks like an email, use it directly
             if (userId != null && userId.contains("@")) {
@@ -291,6 +304,75 @@ public class OrderService {
         } catch (Exception e) {
             logger.error("Failed to send order confirmation email: {}", e.getMessage());
         }
+    }
+
+    private void sendOrderConfirmationEmailWithReceipt(OrderEntity order, List<Item> items) {
+        try {
+            String recipientEmail = getUserEmailFromAuthService(order.getUserId());
+            String customerName = getUserNameFromAuthService(order.getUserId());
+            
+            // Only send email if we have a valid email address
+            if (recipientEmail == null || !recipientEmail.contains("@")) {
+                logger.warn("Skipping order confirmation email with receipt - no valid email address for user: {}", order.getUserId());
+                return;
+            }
+            
+            // Generate PDF receipt
+            byte[] pdfBytes = pdfService.generateReceiptPDF(order, items, customerName, recipientEmail);
+            
+            // Send email with PDF attachment
+            sendEmailWithAttachment(recipientEmail, "Order Confirmed: " + order.getOrderId(), 
+                "Your order has been confirmed! Please find the receipt attached.", 
+                pdfBytes, "receipt_" + order.getOrderId() + ".txt");
+            
+            logger.info("Order confirmation email with receipt sent successfully to: {}", recipientEmail);
+        } catch (Exception e) {
+            logger.error("Failed to send order confirmation email with receipt: {}", e.getMessage());
+        }
+    }
+
+    private void sendEmailWithAttachment(String to, String subject, String body, byte[] attachment, String filename) {
+        try {
+            // For now, send a simple email with receipt content in body
+            // In production, you would use JavaMailSender with MimeMessage for attachments
+            SimpleMailMessage message = new SimpleMailMessage();
+            message.setFrom("vedantsalvi2353@gmail.com");
+            message.setTo(to);
+            message.setSubject(subject);
+            message.setText(body + "\n\nReceipt content:\n" + new String(attachment, "UTF-8"));
+            mailSender.send(message);
+        } catch (Exception e) {
+            logger.error("Failed to send email with attachment: {}", e.getMessage());
+        }
+    }
+
+    public String getUserNameFromAuthService(String userId) {
+        try {
+            // If userId looks like an email, extract name from it
+            if (userId != null && userId.contains("@")) {
+                String email = userId;
+                String name = email.substring(0, email.indexOf("@"));
+                return name.substring(0, 1).toUpperCase() + name.substring(1);
+            }
+            
+            // Try to fetch from AuthService
+            RestTemplate restTemplate = new RestTemplate();
+            String url = "http://localhost:8081/auth/user?email=" + userId;
+            Map response = restTemplate.getForObject(url, Map.class);
+            if (response != null && response.containsKey("firstName")) {
+                String firstName = (String) response.get("firstName");
+                String lastName = (String) response.get("lastName");
+                if (lastName != null && !lastName.isEmpty()) {
+                    return firstName + " " + lastName;
+                }
+                return firstName;
+            }
+        } catch (Exception e) {
+            logger.error("Failed to fetch user name from AuthService: {}", e.getMessage());
+        }
+        
+        // Return default name
+        return "Customer";
     }
 
     private void sendRentalConfirmationEmail(OrderEntity order, OrderRequest request) {

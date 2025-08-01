@@ -434,6 +434,11 @@ const BookingModal: React.FC<BookingModalProps> = ({
 
               setPaymentStep('success');
               toast.success("🧪 Test Payment Successful! Booking confirmed.");
+              
+              // Redirect to order success page
+              setTimeout(() => {
+                window.location.href = `/order-success?orderId=${orderData.id}`;
+              }, 2000);
             } else {
               toast.error("Payment verification failed");
           }
@@ -527,6 +532,11 @@ const BookingModal: React.FC<BookingModalProps> = ({
 
               setPaymentStep('success');
               toast.success("Booking confirmed! Check your email for details.");
+              
+              // Redirect to order success page
+              setTimeout(() => {
+                window.location.href = `/order-success?orderId=${orderData.id}`;
+              }, 2000);
             } else {
               toast.error("Payment verification failed");
             }

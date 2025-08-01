@@ -47,7 +47,7 @@ const ValidatedInput: React.FC<ValidatedInputProps> = ({
 
   // Regex patterns - consistent with other components
   const titleRegex = /^[a-zA-Z][a-zA-Z0-9\s]*$/;
-  const descriptionRegex = /^[a-zA-Z][a-zA-Z0-9\s.,!?'-]*$/;
+  const descriptionRegex = /^[a-zA-Z0-9\s.,!?'"()-]*$/;
 
   const validateInput = (value: string) => {
     if (!value.trim()) {
@@ -70,7 +70,7 @@ const ValidatedInput: React.FC<ValidatedInputProps> = ({
         return false;
       }
     } else if (validationType === 'description') {
-      // Description validation: 10-150 words, no special chars, can't start with number, must have alphabets
+      // Description validation: 10-150 words, more lenient character validation
       const wordCount = value.trim().split(/\s+/).filter((word: string) => word.length > 0).length;
       if (wordCount < 10) {
         setValidationError("Description must contain at least 10 words");
@@ -81,7 +81,7 @@ const ValidatedInput: React.FC<ValidatedInputProps> = ({
         return false;
       }
       if (!descriptionRegex.test(value.trim())) {
-        setValidationError("Description cannot start with a number, must contain alphabets, and minimal special characters allowed");
+        setValidationError("Description contains invalid characters. Only letters, numbers, spaces, and basic punctuation are allowed.");
         return false;
       }
     } else if (validationType === 'usagePolicy') {

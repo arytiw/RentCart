@@ -134,12 +134,13 @@ const RentModal = () => {
         }
         
         // Check description validation
-        if (!currentDescription) return true;
+        if (!currentDescription || currentDescription.trim().length === 0) return true;
         const descWordCount = currentDescription.trim().split(/\s+/).filter((word: string) => word.length > 0).length;
         if (descWordCount < 10 || descWordCount > 150) {
           return true;
         }
-        const descRegex = /^[a-zA-Z][a-zA-Z0-9\s.,!?'-]*$/;
+        // More lenient regex for description - allow more special characters
+        const descRegex = /^[a-zA-Z0-9\s.,!?'"()-]*$/;
         if (!descRegex.test(currentDescription.trim())) {
           return true;
         }

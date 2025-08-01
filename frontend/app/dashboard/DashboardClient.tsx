@@ -27,6 +27,7 @@ const DashboardClient: React.FC<DashboardClientProps> = () => {
   const [loading, setLoading] = useState(true);
   const [items, setItems] = useState<any[]>([]);
   const [reservations, setReservations] = useState<any[]>([]);
+  const [orders, setOrders] = useState<any[]>([]);
 
   useEffect(() => {
     async function fetchData() {
@@ -81,10 +82,27 @@ const DashboardClient: React.FC<DashboardClientProps> = () => {
           console.error('Failed to fetch reservations:', res.status);
           setReservations([]);
         }
+        
+        // Fetch orders with proper authorization header
+        const ordersRes = await fetch('/api/orders', {
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json'
+          }
+        });
+        
+        if (ordersRes.ok) {
+          const ordersData = await ordersRes.json();
+          setOrders(ordersData);
+        } else {
+          console.error('Failed to fetch orders:', ordersRes.status);
+          setOrders([]);
+        }
       } catch (error) {
         console.error('Error fetching data:', error);
         setItems([]);
         setReservations([]);
+        setOrders([]);
       } finally {
         setLoading(false);
       }
@@ -174,8 +192,8 @@ const DashboardClient: React.FC<DashboardClientProps> = () => {
                 <div className="text-sm text-alibaba-gray-600">Listed Items</div>
               </div>
               <div className="text-center px-4 py-2 bg-alibaba-gray-100 rounded-lg">
-                <div className="text-2xl font-bold text-alibaba-black">{reservations.length}</div>
-                <div className="text-sm text-alibaba-gray-600">Bookings</div>
+                <div className="text-2xl font-bold text-alibaba-black">{orders.length}</div>
+                <div className="text-sm text-alibaba-gray-600">Orders</div>
               </div>
             </div>
           </div>
@@ -405,6 +423,105 @@ const DashboardClient: React.FC<DashboardClientProps> = () => {
                       <div className="text-right">
                         <div className="text-sm text-gray-500">Status</div>
                         <div className="font-semibold text-blue-600">Pending Setup</div>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        </div>
+
+        {/* My Orders */}
+        <div className="bg-white rounded-2xl shadow-xl overflow-hidden transform hover:scale-[1.01] transition-transform duration-300">
+          <div className="bg-gradient-to-r from-purple-600 to-pink-600 px-8 py-6">
+            <div className="flex items-center space-x-4">
+              <div className="w-16 h-16 bg-white/20 rounded-full flex items-center justify-center">
+                <FaBox className="text-2xl text-white" />
+              </div>
+              <div>
+                <h2 className="text-2xl font-bold text-white">My Orders</h2>
+                <p className="text-purple-100">
+                  {orders.length} order{orders.length !== 1 ? 's' : ''} placed
+                </p>
+              </div>
+            </div>
+          </div>
+          
+          <div className="p-8">
+            {orders.length === 0 ? (
+              <div className="text-center py-12">
+                <div className="w-24 h-24 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-6">
+                  <FaBox className="text-3xl text-gray-400" />
+                </div>
+                <h3 className="text-xl font-semibold text-gray-700 mb-2">No orders yet</h3>
+                <p className="text-gray-500 mb-2">When you place orders, they will appear here.</p>
+                <p className="text-sm text-gray-400">Start shopping to see your order history!</p>
+              </div>
+            ) : (
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                {orders.map((order: any) => (
+                  <div key={order.id} className="border-2 border-gray-100 hover:border-purple-200 rounded-xl p-6 transition-colors hover:bg-purple-50">
+                    <div className="space-y-3">
+                      <div className="flex items-center justify-between">
+                        <h4 className="font-semibold text-gray-800">Order #{order.orderId}</h4>
+                        <div className={`px-2 py-1 rounded-full text-xs font-bold ${
+                          order.status === 'PLACED' ? 'bg-orange-100 text-orange-800' :
+                          order.status === 'DELIVERED' ? 'bg-green-100 text-green-800' :
+                          order.status === 'CANCELLED' ? 'bg-red-100 text-red-800' :
+                          'bg-yellow-100 text-yellow-800'
+                        }`}>
+                          {order.status}
+                        </div>
+                      </div>
+                      <div className="text-sm text-gray-600">
+                        <p>Amount: ₹{order.totalAmount}</p>
+                        <p>Payment: <span className={`font-semibold ${
+                          order.paymentStatus === 'PAID' ? 'text-green-600' : 'text-red-600'
+                        }`}>{order.paymentStatus}</span></p>
+                        {order.transactionId && (
+                          <p className="text-xs text-gray-500">Txn: {order.transactionId.substring(0, 8)}...</p>
+                        )}
+                      </div>
+                      <div className="flex space-x-2">
+                        <button
+                          onClick={async () => {
+                            try {
+                              const response = await fetch(`/api/orders/${order.id}/receipt`, {
+                                headers: {
+                                  'Authorization': `Bearer ${token}`,
+                                  'Content-Type': 'application/json'
+                                }
+                              });
+                              
+                              if (response.ok) {
+                                const blob = await response.blob();
+                                const url = window.URL.createObjectURL(blob);
+                                const link = document.createElement('a');
+                                link.href = url;
+                                link.setAttribute('download', `receipt_${order.orderId}.txt`);
+                                document.body.appendChild(link);
+                                link.click();
+                                link.remove();
+                                window.URL.revokeObjectURL(url);
+                                toast.success('Receipt downloaded successfully');
+                              } else {
+                                toast.error('Failed to download receipt');
+                              }
+                            } catch (error) {
+                              toast.error('Failed to download receipt');
+                            }
+                          }}
+                          className="bg-purple-600 hover:bg-purple-700 text-white px-3 py-1 rounded-lg text-sm font-semibold transition-colors"
+                        >
+                          Download Receipt
+                        </button>
+                        <button
+                          onClick={() => router.push(`/orders/${order.id}`)}
+                          className="bg-gray-600 hover:bg-gray-700 text-white px-3 py-1 rounded-lg text-sm font-semibold transition-colors"
+                        >
+                          View Details
+                        </button>
                       </div>
                     </div>
                   </div>
