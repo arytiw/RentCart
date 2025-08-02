@@ -128,10 +128,6 @@ const UserMenu: React.FC = () => {
                   label="My Dashboard"
                   onClick={() => router.push("/dashboard")}
                 />
-                <MenuItem
-                  label="My favorites"
-                  onClick={() => router.push("/favorites")}
-                />
                 <MenuItem label="Rent your stuff" onClick={() => router.push('/rent')} />
                 <MenuItem label="Change Password" onClick={() => setShowChangePassword(true)} />
                 <hr className="border-alibaba-gray-200" />

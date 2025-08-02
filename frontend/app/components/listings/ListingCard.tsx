@@ -9,7 +9,6 @@ import useCountries from "@/app/hooks/useCountries";
 import { SafeListing, SafeReservation, SafeUser } from "@/app/types";
 import { useUser } from '@/app/providers/UserProvider';
 
-import HeartButton from "../HeartButton";
 import Button from "../Button";
 import ClientOnly from "../ClientOnly";
 import Avatar from "../Avatar";
@@ -114,18 +113,6 @@ const ListingCard: React.FC<ListingCardProps> = ({
           
           {/* Gradient Overlay */}
           <div className="absolute inset-0 bg-gradient-to-t from-black/20 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
-          
-          {/* Enhanced Heart Button */}
-          <div
-            className="
-            absolute
-            top-4
-            right-4
-            z-10
-          "
-          >
-            <HeartButton listingId={data.id} currentUser={currentUser as any} />
-          </div>
           
           {/* Enhanced Type Badge */}
           <div className="absolute top-4 left-4 z-10">

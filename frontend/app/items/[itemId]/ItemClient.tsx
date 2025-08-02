@@ -8,7 +8,6 @@ import { useMemo, useState, useEffect } from "react";
 import { toast } from "react-hot-toast";
 import Heading from "@/app/components/Heading";
 import Image from "next/image";
-import HeartButton from "@/app/components/HeartButton";
 import Button from "@/app/components/Button";
 import BookingModal from "@/app/components/modals/BookingModal";
 import ReviewModal from "@/app/components/modals/ReviewModal";
@@ -80,12 +79,6 @@ const ItemClient: React.FC<ItemClientProps> = ({
                 alt="Item"
                 className="object-cover h-auto w-full"
               />
-              <div className="absolute top-5 right-5">
-                <HeartButton 
-                  listingId={item.id}
-                  currentUser={currentUser}
-                />
-              </div>
             </div>
           </div>
           

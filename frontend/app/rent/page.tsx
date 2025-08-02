@@ -100,7 +100,12 @@ const RentPage = () => {
   };
 
   const onBack = () => {
-    setStep((value) => value - 1);
+    if (step > 0) {
+      setStep((value) => value - 1);
+    } else {
+      // If on first step, navigate back to dashboard or home
+      router.push('/dashboard');
+    }
   };
 
   const onNext = () => {
@@ -161,6 +166,13 @@ const RentPage = () => {
     if (newFeature.trim() && !features.includes(newFeature.trim())) {
       setFeatures([...features, newFeature.trim()]);
       setNewFeature("");
+    }
+  };
+
+  const handleFeatureKeyPress = (e: React.KeyboardEvent) => {
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      addFeature();
     }
   };
 
@@ -310,6 +322,7 @@ const RentPage = () => {
                   type="text"
                   value={newFeature}
                   onChange={(e) => setNewFeature(e.target.value)}
+                  onKeyPress={handleFeatureKeyPress}
                   disabled={isLoading}
                   placeholder="Enter a feature"
                   className="
@@ -354,24 +367,87 @@ const RentPage = () => {
                   Add a feature
                 </label>
               </div>
-              <Button
-                label="Add"
+              <button
+                type="button"
                 onClick={addFeature}
                 disabled={isLoading || !newFeature.trim()}
-                small
-              />
+                className="
+                  px-4
+                  py-4
+                  bg-orange-500
+                  text-white
+                  rounded-xl
+                  font-semibold
+                  hover:bg-orange-600
+                  transition-all
+                  duration-200
+                  disabled:opacity-50
+                  disabled:cursor-not-allowed
+                  shadow-sm
+                  hover:shadow-md
+                  transform
+                  hover:scale-[1.02]
+                  active:scale-[0.98]
+                  min-w-[80px]
+                  flex
+                  items-center
+                  justify-center
+                  focus:outline-none
+                  focus:ring-2
+                  focus:ring-orange-500
+                  focus:ring-offset-2
+                "
+              >
+                Add
+              </button>
             </div>
             <div className="flex flex-wrap gap-2">
+              {features.length === 0 && (
+                <div className="text-gray-500 text-sm italic">
+                  No features added yet. Add some features to make your item stand out!
+                </div>
+              )}
               {features.map((feature, index) => (
                 <div
                   key={index}
-                  className="flex items-center gap-2 bg-gray-100 px-3 py-1 rounded-full"
+                  className="
+                    flex 
+                    items-center 
+                    gap-2 
+                    bg-orange-100 
+                    text-orange-800 
+                    px-3 
+                    py-2 
+                    rounded-full
+                    border
+                    border-orange-200
+                    hover:bg-orange-200
+                    transition-colors
+                    duration-200
+                    group
+                  "
                 >
-                  <span className="text-sm">{feature}</span>
+                  <span className="text-sm font-medium">{feature}</span>
                   <button
                     type="button"
                     onClick={() => removeFeature(feature)}
-                    className="text-red-500 hover:text-red-700"
+                    className="
+                      text-orange-600 
+                      hover:text-orange-800 
+                      font-bold
+                      text-lg
+                      leading-none
+                      w-5
+                      h-5
+                      flex
+                      items-center
+                      justify-center
+                      rounded-full
+                      hover:bg-orange-300
+                      transition-all
+                      duration-200
+                    "
+                    title="Remove feature"
                   >
                     ×
                   </button>
@@ -480,6 +556,29 @@ const RentPage = () => {
             <div className="lg:hidden flex items-center justify-center gap-2 mb-6">
               <FaShoppingCart size={28} className="text-orange-500" />
               <h1 className="text-xl font-bold text-gray-900">RentCart</h1>
+            </div>
+
+            {/* Back Button */}
+            <div className="mb-4">
+              <button
+                onClick={() => router.push('/dashboard')}
+                className="
+                  flex
+                  items-center
+                  gap-2
+                  text-gray-600
+                  hover:text-gray-900
+                  transition-colors
+                  duration-200
+                  font-medium
+                  text-sm
+                "
+              >
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+                </svg>
+                Back to Dashboard
+              </button>
             </div>
 
             {/* Form Content */}
