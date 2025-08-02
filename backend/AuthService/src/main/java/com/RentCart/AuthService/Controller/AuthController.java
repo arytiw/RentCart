@@ -7,11 +7,14 @@ import java.util.Map;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.dao.DuplicateKeyException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.validation.annotation.Validated;
+import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.CrossOrigin;
+import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -51,14 +54,70 @@ public class AuthController {
     public ResponseEntity<?> addNewUser(@Valid @RequestBody UserCredentials user) {
         logger.info("Register attempt for email: {}", user.getEmailId());
 
-        if (service.getUserByEmailId(user.getEmailId()) != null) {
-            logger.warn("Registration failed: Email already registered - {}", user.getEmailId());
-            return ResponseEntity.status(HttpStatus.CONFLICT).body("Email already registered.");
-        }
+        try {
+            // Check for existing email
+            if (service.getUserByEmailId(user.getEmailId()) != null) {
+                logger.warn("Registration failed: Email already registered - {}", user.getEmailId());
+                Map<String, Object> errorResponse = new HashMap<>();
+                Map<String, String> fieldErrors = new HashMap<>();
+                fieldErrors.put("emailId", "Email already registered");
+                errorResponse.put("fieldErrors", fieldErrors);
+                errorResponse.put("message", "Email already registered");
+                return ResponseEntity.status(HttpStatus.CONFLICT).body(errorResponse);
+            }
 
-        String message = service.saveUser(user);
-        logger.info("User registered successfully: {}", user.getEmailId());
-        return ResponseEntity.status(HttpStatus.CREATED).body(message);
+            // Check for existing username
+            if (service.getUserByUsername(user.getUsername()) != null) {
+                logger.warn("Registration failed: Username already taken - {}", user.getUsername());
+                Map<String, Object> errorResponse = new HashMap<>();
+                Map<String, String> fieldErrors = new HashMap<>();
+                fieldErrors.put("username", "Username already taken");
+                errorResponse.put("fieldErrors", fieldErrors);
+                errorResponse.put("message", "Username already taken");
+                return ResponseEntity.status(HttpStatus.CONFLICT).body(errorResponse);
+            }
+
+            // Check for existing phone number if provided
+            if (user.getPhoneNumber() != null && !user.getPhoneNumber().trim().isEmpty()) {
+                if (service.getUserByPhoneNumber(user.getPhoneNumber()) != null) {
+                    logger.warn("Registration failed: Phone number already registered - {}", user.getPhoneNumber());
+                    Map<String, Object> errorResponse = new HashMap<>();
+                    Map<String, String> fieldErrors = new HashMap<>();
+                    fieldErrors.put("phoneNumber", "Phone number already registered");
+                    errorResponse.put("fieldErrors", fieldErrors);
+                    errorResponse.put("message", "Phone number already registered");
+                    return ResponseEntity.status(HttpStatus.CONFLICT).body(errorResponse);
+                }
+            }
+
+            String message = service.saveUser(user);
+            logger.info("User registered successfully: {}", user.getEmailId());
+            return ResponseEntity.status(HttpStatus.CREATED).body(message);
+            
+        } catch (DuplicateKeyException e) {
+            logger.error("Duplicate key exception during registration: {}", e.getMessage());
+            Map<String, Object> errorResponse = new HashMap<>();
+            Map<String, String> fieldErrors = new HashMap<>();
+            
+            if (e.getMessage().contains("emailId")) {
+                fieldErrors.put("emailId", "Email already registered");
+            } else if (e.getMessage().contains("username")) {
+                fieldErrors.put("username", "Username already taken");
+            } else if (e.getMessage().contains("phoneNumber")) {
+                fieldErrors.put("phoneNumber", "Phone number already registered");
+            } else {
+                fieldErrors.put("general", "Registration failed due to duplicate data");
+            }
+            
+            errorResponse.put("fieldErrors", fieldErrors);
+            errorResponse.put("message", "Registration failed due to duplicate data");
+            return ResponseEntity.status(HttpStatus.CONFLICT).body(errorResponse);
+        } catch (Exception e) {
+            logger.error("Unexpected error during registration: {}", e.getMessage(), e);
+            Map<String, Object> errorResponse = new HashMap<>();
+            errorResponse.put("message", "Registration failed. Please try again.");
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(errorResponse);
+        }
     }
 
     @GetMapping("/users")
@@ -194,5 +253,21 @@ public class AuthController {
         } else {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Invalid old password or user not found.");
         }
+    }
+
+    @ExceptionHandler(MethodArgumentNotValidException.class)
+    public ResponseEntity<?> handleValidationExceptions(MethodArgumentNotValidException ex) {
+        Map<String, Object> errorResponse = new HashMap<>();
+        Map<String, String> fieldErrors = new HashMap<>();
+        
+        ex.getBindingResult().getFieldErrors().forEach(error -> {
+            fieldErrors.put(error.getField(), error.getDefaultMessage());
+        });
+        
+        errorResponse.put("fieldErrors", fieldErrors);
+        errorResponse.put("message", "Validation failed");
+        
+        logger.warn("Validation error during registration: {}", fieldErrors);
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(errorResponse);
     }
 }

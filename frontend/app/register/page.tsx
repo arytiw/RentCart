@@ -23,6 +23,7 @@ import Button from "../components/Button";
 const RegisterPage = () => {
   const router = useRouter();
   const [isLoading, setIsLoading] = useState(false);
+  const [fieldErrors, setFieldErrors] = useState<{[key: string]: string}>({});
   const { setUser, setToken } = useUser();
 
   const { 
@@ -31,32 +32,255 @@ const RegisterPage = () => {
     formState: {
       errors,
     },
+    watch,
   } = useForm<FieldValues>({
     defaultValues: {
+      username: '',
       firstName: '',
       lastName: '',
       emailId: '',
       password: '',
-      confirmPassword: ''
+      confirmPassword: '',
+      phoneNumber: '',
+      gender: '',
+      dateOfBirth: '',
+      addressLine1: '',
+      addressLine2: '',
+      city: '',
+      state: '',
+      country: '',
+      postalCode: ''
     },
   });
+
+  // Clear field errors when user starts typing
+  const clearFieldError = (fieldName: string) => {
+    setFieldErrors(prev => {
+      const newErrors = { ...prev };
+      delete newErrors[fieldName];
+      return newErrors;
+    });
+  };
+
+  // Validation functions
+  const validateUsername = (username: string): string | null => {
+    if (!username.trim()) {
+      return "Username is required";
+    }
+    if (username.length < 3) {
+      return "Username must be at least 3 characters long";
+    }
+    if (username.length > 50) {
+      return "Username must be less than 50 characters";
+    }
+    if (!/^[A-Za-z0-9_]+$/.test(username)) {
+      return "Username can only contain letters, numbers, and underscores";
+    }
+    return null;
+  };
+
+  const validateFirstName = (firstName: string): string | null => {
+    if (!firstName.trim()) {
+      return "First name is required";
+    }
+    if (!/^[A-Za-z][A-Za-z\s]*$/.test(firstName)) {
+      return "First name must contain only letters and spaces, and start with a letter";
+    }
+    if (firstName.length > 50) {
+      return "First name must be less than 50 characters";
+    }
+    return null;
+  };
+
+  const validateLastName = (lastName: string): string | null => {
+    if (lastName.trim()) {
+      if (!/^[A-Za-z][A-Za-z ]{0,29}$/.test(lastName)) {
+        return "Last name must be up to 30 characters, only letters and spaces, and start with a letter";
+      }
+    }
+    return null;
+  };
+
+  const validateEmail = (email: string): string | null => {
+    if (!email.trim()) {
+      return "Email is required";
+    }
+    const emailRegex = /^[A-Za-z0-9+_.-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}$/;
+    if (!emailRegex.test(email)) {
+      return "Please enter a valid email address";
+    }
+    return null;
+  };
+
+  const validatePassword = (password: string): string | null => {
+    if (!password) {
+      return "Password is required";
+    }
+    if (password.length < 8) {
+      return "Password must be at least 8 characters long";
+    }
+    if (password.length > 100) {
+      return "Password must be less than 100 characters";
+    }
+    if (!/(?=.*[a-z])/.test(password)) {
+      return "Password must contain at least one lowercase letter";
+    }
+    if (!/(?=.*[A-Z])/.test(password)) {
+      return "Password must contain at least one uppercase letter";
+    }
+    if (!/(?=.*\d)/.test(password)) {
+      return "Password must contain at least one number";
+    }
+    return null;
+  };
+
+  const validatePhoneNumber = (phoneNumber: string): string | null => {
+    if (phoneNumber.trim()) {
+      const phoneRegex = /^[\+]?[1-9][\d]{0,15}$/;
+      if (!phoneRegex.test(phoneNumber.replace(/\s/g, ''))) {
+        return "Please enter a valid phone number";
+      }
+    }
+    return null;
+  };
+
+  const validateGender = (gender: string): string | null => {
+    if (gender && !['Male', 'Female', 'Other'].includes(gender)) {
+      return "Gender must be Male, Female, or Other";
+    }
+    return null;
+  };
+
+  const validateDateOfBirth = (dateOfBirth: string): string | null => {
+    if (dateOfBirth) {
+      const today = new Date();
+      const birthDate = new Date(dateOfBirth);
+      const age = today.getFullYear() - birthDate.getFullYear();
+      
+      if (birthDate > today) {
+        return "Date of birth cannot be in the future";
+      }
+      if (age < 13) {
+        return "You must be at least 13 years old to register";
+      }
+      if (age > 120) {
+        return "Please enter a valid date of birth";
+      }
+    }
+    return null;
+  };
+
+  const validateAddress = (addressData: any): {[key: string]: string} => {
+    const errors: {[key: string]: string} = {};
+    const hasAnyAddressInfo = addressData.addressLine1 || addressData.addressLine2 || 
+                             addressData.city || addressData.state || 
+                             addressData.country || addressData.postalCode;
+
+    if (hasAnyAddressInfo) {
+      // If user provides any address info, validate all required fields
+      if (!addressData.addressLine1?.trim()) {
+        errors.addressLine1 = "Address Line 1 is required when providing address information";
+      }
+      if (!addressData.addressLine2?.trim()) {
+        errors.addressLine2 = "Address Line 2 is required when providing address information";
+      }
+      if (!addressData.city?.trim()) {
+        errors.city = "City is required when providing address information";
+      }
+      if (!addressData.state?.trim()) {
+        errors.state = "State is required when providing address information";
+      }
+      if (!addressData.country?.trim()) {
+        errors.country = "Country is required when providing address information";
+      }
+      if (!addressData.postalCode?.trim()) {
+        errors.postalCode = "Postal Code is required when providing address information";
+      }
+    }
+
+    return errors;
+  };
   
   const onSubmit: SubmitHandler<FieldValues> = async (data) => {
     setIsLoading(true);
+    setFieldErrors({});
 
-    // Check if passwords match
+    // Validate all fields
+    const errors: {[key: string]: string} = {};
+
+    // Username validation
+    const usernameError = validateUsername(data.username);
+    if (usernameError) errors.username = usernameError;
+
+    // First name validation
+    const firstNameError = validateFirstName(data.firstName);
+    if (firstNameError) errors.firstName = firstNameError;
+
+    // Last name validation
+    const lastNameError = validateLastName(data.lastName);
+    if (lastNameError) errors.lastName = lastNameError;
+
+    // Email validation
+    const emailError = validateEmail(data.emailId);
+    if (emailError) errors.emailId = emailError;
+
+    // Password validation
+    const passwordError = validatePassword(data.password);
+    if (passwordError) errors.password = passwordError;
+
+    // Confirm password validation
     if (data.password !== data.confirmPassword) {
-      toast.error('Passwords do not match');
+      errors.confirmPassword = "Passwords do not match";
+    }
+
+    // Phone number validation
+    const phoneError = validatePhoneNumber(data.phoneNumber);
+    if (phoneError) errors.phoneNumber = phoneError;
+
+    // Gender validation
+    const genderError = validateGender(data.gender);
+    if (genderError) errors.gender = genderError;
+
+    // Date of birth validation
+    const dobError = validateDateOfBirth(data.dateOfBirth);
+    if (dobError) errors.dateOfBirth = dobError;
+
+    // Address validation
+    const addressErrors = validateAddress(data);
+    Object.assign(errors, addressErrors);
+
+    // If there are validation errors, show them and stop
+    if (Object.keys(errors).length > 0) {
+      setFieldErrors(errors);
       setIsLoading(false);
+      toast.error('Please fix the errors in the form');
       return;
     }
 
-    const payload = {
+    // Build payload
+    const payload: any = {
+      username: data.username,
       firstName: data.firstName,
-      lastName: data.lastName,
+      lastName: data.lastName || '',
       emailId: data.emailId,
-      password: data.password
+      password: data.password,
+      phoneNumber: data.phoneNumber || '',
+      gender: data.gender || '',
+      dateOfBirth: data.dateOfBirth || ''
     };
+
+    // Only include address if user provided address information
+    const hasAddressInfo = data.addressLine1 || data.addressLine2 || data.city || data.state || data.country || data.postalCode;
+    if (hasAddressInfo) {
+      payload.address = {
+        addressLine1: data.addressLine1 || '',
+        addressLine2: data.addressLine2 || '',
+        city: data.city || '',
+        state: data.state || '',
+        country: data.country || '',
+        postalCode: data.postalCode || ''
+      };
+    }
 
     try {
       const url = buildUrl('AUTH_SERVICE', API_CONFIG.ENDPOINTS.REGISTER);
@@ -94,13 +318,27 @@ const RegisterPage = () => {
           toast.error('Invalid response from server');
         }
       } else {
-        const errorText = await response.text();
-        toast.error(`Registration failed: ${errorText}`);
+        try {
+          const errorData = await response.json();
+
+          if (errorData.fieldErrors) {
+            Object.entries(errorData.fieldErrors).forEach(([field, message]) => {
+              setFieldErrors(prev => ({ ...prev, [field as string]: message as string }));
+            });
+            toast.error('Please fix the errors in the form');
+          } else {
+            toast.error(errorData.message || "Registration failed.");
+          }
+        } catch (parseError) {
+          // If JSON parsing fails, fall back to text response
+          const errorText = await response.text();
+          toast.error(`Registration failed: ${errorText}`);
+        }
       }
     } catch (error) {
       setIsLoading(false);
       console.error('Registration error:', error);
-      toast.error('Registration failed. Please check your connection.');
+      toast.error('Enter Unique Email Id.');
     }
   };
 
@@ -215,55 +453,250 @@ const RegisterPage = () => {
               <div className="flex flex-col gap-6">
                 <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
                   <div className="space-y-4">
+                    {/* Basic Information */}
                     <div className="grid grid-cols-2 gap-4">
+                      <div>
+                        <Input
+                          id="firstName"
+                          label="First Name *"
+                          disabled={isLoading}
+                          register={register}  
+                          errors={errors}
+                          required
+                          noValidation={true}
+                        />
+                        {fieldErrors.firstName && (
+                          <p className="text-red-500 text-xs mt-1">{fieldErrors.firstName}</p>
+                        )}
+                      </div>
+                      <div>
+                        <Input
+                          id="lastName"
+                          label="Last Name"
+                          disabled={isLoading}
+                          register={register}
+                          errors={errors}
+                          required
+                          noValidation={true}
+                        />
+                        {fieldErrors.lastName && (
+                          <p className="text-red-500 text-xs mt-1">{fieldErrors.lastName}</p>
+                        )}
+                      </div>
+                    </div>
+                    
+                    <div>
                       <Input
-                        id="firstName"
-                        label="First Name"
+                        id="username"
+                        label="Username *"
                         disabled={isLoading}
                         register={register}  
                         errors={errors}
                         required
                         noValidation={true}
                       />
+                      {fieldErrors.username && (
+                        <p className="text-red-500 text-xs mt-1">{fieldErrors.username}</p>
+                      )}
+                    </div>
+                    
+                    <div>
                       <Input
-                        id="lastName"
-                        label="Last Name"
+                        id="emailId"
+                        label="Email *"
+                        type="email"
+                        disabled={isLoading}
+                        register={register}  
+                        errors={errors}
+                        required
+                        noValidation={true}
+                      />
+                      {fieldErrors.emailId && (
+                        <p className="text-red-500 text-xs mt-1">{fieldErrors.emailId}</p>
+                      )}
+                    </div>
+                    
+                    <div>
+                      <Input
+                        id="phoneNumber"
+                        label="Phone Number"
                         disabled={isLoading}
                         register={register}
                         errors={errors}
                         required
                         noValidation={true}
                       />
+                      {fieldErrors.phoneNumber && (
+                        <p className="text-red-500 text-xs mt-1">{fieldErrors.phoneNumber}</p>
+                      )}
                     </div>
-                    <Input
-                      id="emailId"
-                      label="Email"
-                      disabled={isLoading}
-                      register={register}  
-                      errors={errors}
-                      required
-                      noValidation={true}
-                    />
-                    <Input
-                      id="password"
-                      label="Password"
-                      type="password"
-                      disabled={isLoading}
-                      register={register}
-                      errors={errors}
-                      required
-                      noValidation={true}
-                    />
-                    <Input
-                      id="confirmPassword"
-                      label="Confirm Password"
-                      type="password"
-                      disabled={isLoading}
-                      register={register}
-                      errors={errors}
-                      required
-                      noValidation={true}
-                    />
+                    
+                    <div className="grid grid-cols-2 gap-4">
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-2">
+                          Gender
+                        </label>
+                        <select
+                          {...register('gender')}
+                          disabled={isLoading}
+                          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-orange-500"
+                        >
+                          <option value="">Select Gender</option>
+                          <option value="Male">Male</option>
+                          <option value="Female">Female</option>
+                          <option value="Other">Other</option>
+                        </select>
+                        {fieldErrors.gender && (
+                          <p className="text-red-500 text-xs mt-1">{fieldErrors.gender}</p>
+                        )}
+                      </div>
+                      
+                      <div>
+                        <Input
+                          id="dateOfBirth"
+                          label="Date of Birth"
+                          type="date"
+                          disabled={isLoading}
+                          register={register}
+                          errors={errors}
+                          required
+                          noValidation={true}
+                        />
+                        {fieldErrors.dateOfBirth && (
+                          <p className="text-red-500 text-xs mt-1">{fieldErrors.dateOfBirth}</p>
+                        )}
+                      </div>
+                    </div>
+                    
+                    <div>
+                      <Input
+                        id="password"
+                        label="Password *"
+                        type="password"
+                        disabled={isLoading}
+                        register={register}
+                        errors={errors}
+                        required
+                        noValidation={true}
+                      />
+                      {fieldErrors.password && (
+                        <p className="text-red-500 text-xs mt-1">{fieldErrors.password}</p>
+                      )}
+                    </div>
+                    <div>
+                      <Input
+                        id="confirmPassword"
+                        label="Confirm Password *"
+                        type="password"
+                        disabled={isLoading}
+                        register={register}
+                        errors={errors}
+                        required
+                        noValidation={true}
+                      />
+                      {fieldErrors.confirmPassword && (
+                        <p className="text-red-500 text-xs mt-1">{fieldErrors.confirmPassword}</p>
+                      )}
+                    </div>
+                    
+                    {/* Address Section - Optional */}
+                    <div className="border-t pt-4">
+                      <h3 className="text-lg font-semibold text-gray-900 mb-4">Address Information (Optional)</h3>
+                      
+                      <div>
+                        <Input
+                          id="addressLine1"
+                          label="Address Line 1"
+                          disabled={isLoading}
+                          register={register}
+                          errors={errors}
+                          required
+                          noValidation={true}
+                        />
+                        {fieldErrors.addressLine1 && (
+                          <p className="text-red-500 text-xs mt-1">{fieldErrors.addressLine1}</p>
+                        )}
+                      </div>
+                      
+                      <div>
+                        <Input
+                          id="addressLine2"
+                          label="Address Line 2"
+                          disabled={isLoading}
+                          register={register}
+                          errors={errors}
+                          required
+                          noValidation={true}
+                        />
+                        {fieldErrors.addressLine2 && (
+                          <p className="text-red-500 text-xs mt-1">{fieldErrors.addressLine2}</p>
+                        )}
+                      </div>
+                      
+                      <div className="grid grid-cols-2 gap-4">
+                        <div>
+                          <Input
+                            id="city"
+                            label="City"
+                            disabled={isLoading}
+                            register={register}
+                            errors={errors}
+                            required
+                            noValidation={true}
+                          />
+                          {fieldErrors.city && (
+                            <p className="text-red-500 text-xs mt-1">{fieldErrors.city}</p>
+                          )}
+                        </div>
+                        
+                        <div>
+                          <Input
+                            id="state"
+                            label="State"
+                            disabled={isLoading}
+                            register={register}
+                            errors={errors}
+                            required
+                            noValidation={true}
+                          />
+                          {fieldErrors.state && (
+                            <p className="text-red-500 text-xs mt-1">{fieldErrors.state}</p>
+                          )}
+                        </div>
+                      </div>
+                      
+                      <div className="grid grid-cols-2 gap-4">
+                        <div>
+                          <Input
+                            id="country"
+                            label="Country"
+                            disabled={isLoading}
+                            register={register}
+                            errors={errors}
+                            required
+                            noValidation={true}
+                          />
+                          {fieldErrors.country && (
+                            <p className="text-red-500 text-xs mt-1">{fieldErrors.country}</p>
+                          )}
+                        </div>
+                        
+                        <div>
+                          <Input
+                            id="postalCode"
+                            label="Postal Code"
+                            disabled={isLoading}
+                            register={register}
+                            errors={errors}
+                            required
+                            noValidation={true}
+                          />
+                          {fieldErrors.postalCode && (
+                            <p className="text-red-500 text-xs mt-1">{fieldErrors.postalCode}</p>
+                          )}
+                        </div>
+                      </div>
+                    </div>
                   </div>
                   
                   {/* Continue Button */}
@@ -290,14 +723,14 @@ const RegisterPage = () => {
                 
                 <div className="space-y-3">
                   <button 
-                    onClick={() => toast.info('Google sign-in coming soon!')}
+                    onClick={() => toast.error('Google sign-in coming soon!')}
                     className="w-full flex items-center justify-center gap-3 px-4 py-3 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors duration-200 font-medium text-gray-700"
                   >
                     <FcGoogle size={20} />
                     Continue with Google
                   </button>
                   <button 
-                    onClick={() => toast.info('Github sign-in coming soon!')}
+                    onClick={() => toast.error('Github sign-in coming soon!')}
                     className="w-full flex items-center justify-center gap-3 px-4 py-3 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors duration-200 font-medium text-gray-700"
                   >
                     <AiFillGithub size={20} />

@@ -9,5 +9,6 @@ import com.RentCart.AuthService.Entity.UserCredentials;
 public interface UserCredentialRepository extends MongoRepository<UserCredentials, String > {
 	Optional<UserCredentials> findByUsername(String username);
 	Optional<UserCredentials> findByEmailId(String emailId);
+	Optional<UserCredentials> findByPhoneNumber(String phoneNumber);
 	boolean existsByEmailId(String emailId);
 }

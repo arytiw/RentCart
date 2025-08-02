@@ -37,7 +37,7 @@ const ForgotPasswordPage = () => {
     setIsLoading(true);
 
     const payload = {
-      emailId: data.email
+      email: data.email
     };
 
     try {

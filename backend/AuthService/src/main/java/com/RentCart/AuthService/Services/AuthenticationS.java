@@ -33,6 +33,14 @@ public class AuthenticationS {
 		return repository.findByEmailId(emailId).orElse(null);
 	}
 	
+	public UserCredentials getUserByUsername(String username) {
+		return repository.findByUsername(username).orElse(null);
+	}
+	
+	public UserCredentials getUserByPhoneNumber(String phoneNumber) {
+		return repository.findByPhoneNumber(phoneNumber).orElse(null);
+	}
+	
 	 // ✅ Password match using encoder
     public boolean passwordMatches(String rawPassword, String encodedPassword) {
         return passwordEncoder.matches(rawPassword, encodedPassword);

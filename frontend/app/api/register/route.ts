@@ -7,28 +7,30 @@ export async function POST(
   try {
     const body = await request.json();
     const { 
-      email,
-      name,
-      password,
+      username,
       firstName,
       lastName,
+      emailId,
+      password,
       phoneNumber,
       gender,
-      dateOfBirth
+      dateOfBirth,
+      address
     } = body;
 
     // Register user through AuthService
     const url = buildUrl('AUTH_SERVICE', API_CONFIG.ENDPOINTS.REGISTER);
     
     const userData = {
-      emailId: email,
-      username: name,
+      username: username,
+      firstName: firstName,
+      lastName: lastName,
+      emailId: emailId,
       password: password,
-      firstName: firstName || name,
-      lastName: lastName || '',
       phoneNumber: phoneNumber || '',
       gender: gender || '',
-      dateOfBirth: dateOfBirth || ''
+      dateOfBirth: dateOfBirth || '',
+      address: address || null
     };
 
     const response = await apiClient.post(url, userData);
@@ -37,9 +39,10 @@ export async function POST(
       success: true, 
       message: 'User registered successfully',
       user: {
-        id: email,
-        email: email,
-        name: name
+        username: username,
+        emailId: emailId,
+        firstName: firstName,
+        lastName: lastName
       }
     });
   } catch (error) {
