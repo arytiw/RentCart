@@ -1,0 +1,63 @@
+@echo off
+REM RentCart Rent Services Startup Script
+REM This script starts only the services needed for rent functionality
+
+echo 🚀 Starting RentCart Rent Services...
+
+REM Create logs directory if it doesn't exist
+if not exist "logs" mkdir logs
+
+REM Kill any existing processes
+echo 🧹 Cleaning up existing processes...
+taskkill /f /im java.exe 2>nul
+taskkill /f /im node.exe 2>nul
+
+REM Wait a moment for processes to stop
+timeout /t 3 /nobreak >nul
+
+REM Start AuthService (required for authentication)
+echo 🔧 Starting AuthService on port 8081...
+cd backend\AuthService
+start "AuthService" cmd /c "mvn spring-boot:run > ..\..\logs\AuthService.log 2>&1"
+cd ..\..
+
+REM Start ItemService (required for item creation)
+echo 🔧 Starting ItemService on port 9091...
+cd backend\ItemService
+start "ItemService" cmd /c "mvn spring-boot:run > ..\..\logs\ItemService.log 2>&1"
+cd ..\..
+
+REM Wait for services to start
+echo ⏳ Waiting for services to start...
+timeout /t 30 /nobreak >nul
+
+REM Start Frontend
+echo 🌐 Starting Frontend...
+cd frontend
+
+REM Check if node_modules exists
+if not exist "node_modules" (
+    echo 📦 Installing frontend dependencies...
+    npm install
+)
+
+REM Start frontend
+echo 🚀 Starting Next.js frontend...
+start "Frontend" cmd /c "npm run dev > ..\logs\frontend.log 2>&1"
+cd ..
+
+echo.
+echo 🎉 Rent services started successfully!
+echo.
+echo 📊 Service Status:
+echo    AuthService:    http://localhost:8081
+echo    ItemService:    http://localhost:9091
+echo    Frontend:       http://localhost:3000
+echo.
+echo 📝 Logs are available in the logs\ directory
+echo 🛑 To stop all services, close the command windows or run stop-services.bat
+echo.
+echo 💡 Services may take a few minutes to fully start up.
+echo    Check the logs in the logs\ directory for more details.
+echo.
+pause 
