@@ -15,10 +15,13 @@ export default function SupportChat() {
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const chatContainerRef = useRef<HTMLDivElement>(null);
 
-  // Auto-scroll to bottom when new messages arrive
+  // Auto-scroll to bottom when new messages arrive - only within chat container
   useEffect(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+    if (chatContainerRef.current) {
+      chatContainerRef.current.scrollTop = chatContainerRef.current.scrollHeight;
+    }
   }, [messages]);
 
   // Simplified quick action buttons
@@ -136,7 +139,10 @@ export default function SupportChat() {
       </div>
 
       {/* Chat Messages */}
-        <div className="h-96 overflow-y-auto bg-gray-50 p-4 space-y-4">
+        <div 
+          ref={chatContainerRef}
+          className="h-96 overflow-y-auto bg-gray-50 p-4 space-y-4 scroll-smooth"
+        >
         {messages.map((m, i) => (
           <div key={i} className={`flex ${m.from === "user" ? "justify-end" : "justify-start"}`}>
               <div className={`max-w-[80%] ${
@@ -168,7 +174,7 @@ export default function SupportChat() {
             </div>
           </div>
         )}
-        <div ref={messagesEndRef} />
+        <div ref={messagesEndRef} style={{ height: '1px' }} />
       </div>
 
       {/* Input Area */}

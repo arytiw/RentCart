@@ -51,7 +51,7 @@ const Search = () => {
     <div className="relative">
       <form
         onSubmit={handleSubmit}
-        className={`border-2 ${searchError ? 'border-red-500' : 'border-alibaba-gray-200'} w-full md:w-auto py-2 rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 flex flex-row items-center gap-2 bg-white/90 backdrop-blur-sm focus-within:border-alibaba-orange focus-within:shadow-xl`}
+        className={`border-2 ${searchError ? 'border-red-500' : 'border-alibaba-gray-200'} w-full min-w-[400px] md:min-w-[500px] py-2 rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 flex flex-row items-center gap-2 bg-white/90 backdrop-blur-sm focus-within:border-alibaba-orange focus-within:shadow-xl`}
         role="search"
       >
         <input

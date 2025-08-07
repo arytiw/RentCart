@@ -9,9 +9,9 @@ const Logo = () => {
   return ( 
     <div
       onClick={() => router.push('/')}
-      className="hidden md:flex items-center gap-2 cursor-pointer font-bold text-3xl text-red-600 hover:text-red-700 transition-colors drop-shadow-md"
+      className="hidden md:flex items-center gap-2 cursor-pointer font-bold text-3xl text-alibaba-black hover:text-alibaba-gray-800 transition-colors drop-shadow-md"
     >
-      <FaShoppingCart size={32} className="text-red-600" />
+      <FaShoppingCart size={32} className="text-alibaba-black" />
       <span>RentCart</span>
     </div>
    );

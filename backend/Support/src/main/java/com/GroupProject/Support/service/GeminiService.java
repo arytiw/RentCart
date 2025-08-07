@@ -1,14 +1,15 @@
 package com.GroupProject.Support.service;
 
-import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.stereotype.Service;
-
 import java.net.URI;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
+
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.stereotype.Service;
+
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.fasterxml.jackson.databind.ObjectMapper;
 
 @Service
 public class GeminiService {
@@ -18,7 +19,19 @@ public class GeminiService {
 
     public String getGeminiResponse(String userMessage) throws Exception {
         String endpoint = "https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash-latest:generateContent?key=" + apiKey;
-        String requestBody = "{ \"contents\": [{ \"parts\": [{ \"text\": \"" + userMessage.replace("\"", "\\\"") + "\" }] }] }";
+        
+        // Custom prompt for RentCart support with specific instructions
+        String customPrompt = "You are RentCart's customer support AI assistant. " +
+                             "IMPORTANT INSTRUCTIONS: " +
+                             "- Keep responses SHORT and TO THE POINT (maximum 2-3 sentences) " +
+                             "- Be SPECIFIC and DIRECT about solutions " +
+                             "- Focus ONLY on RentCart rental marketplace issues " +
+                             "- If it's about booking, payments, items, or account issues, provide clear steps " +
+                             "- If unrelated to RentCart, politely redirect to RentCart topics " +
+                             "- No lengthy explanations - be concise and actionable " +
+                             "\\n\\nUser question: " + userMessage;
+        
+        String requestBody = "{ \"contents\": [{ \"parts\": [{ \"text\": \"" + customPrompt.replace("\"", "\\\"") + "\" }] }] }";
 
         HttpClient client = HttpClient.newHttpClient();
         HttpRequest request = HttpRequest.newBuilder()

@@ -33,8 +33,12 @@ const Navbar: React.FC<NavbarProps> = ({
             md:gap-0
           "
         >
-          <Logo />
-          <Search />
+          <div className="flex items-center gap-6">
+            <Logo />
+            <div className="flex-1 max-w-2xl">
+              <Search />
+            </div>
+          </div>
           <div className="flex items-center gap-3">
             <a 
               href="/items" 
