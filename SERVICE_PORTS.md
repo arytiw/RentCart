@@ -1,6 +1,6 @@
 # RentCart Service Port Configuration
 
-## 🚀 Service Ports
+##  Service Ports
 
 | Service | Port | URL | Status |
 |---------|------|-----|--------|
@@ -9,7 +9,7 @@
 | **OrderService** | 9092 | http://localhost:9092 | ✅ Running |
 | **Frontend** | 3000 | http://localhost:3000 | ✅ Running |
 
-## 📋 Quick Start
+## Quick Start
 
 ### Option 1: Use the startup script
 ```bash
@@ -35,34 +35,33 @@ cd rentpal-main && npm run dev
 
 ### Review Service
 - **File**: `Review/src/main/resources/application.properties`
-- **Port**: 9090 ✅
+- **Port**: 9090 
 
 ### ItemService
 - **File**: `ItemService/src/main/resources/application.properties`
-- **Port**: 9091 ✅
+- **Port**: 9091 
 
 ### OrderService
 - **File**: `OrderService/src/main/resources/application.properties`
-- **Port**: 9092 ✅
+- **Port**: 9092 
 
 ## 🌐 Frontend API Endpoints Updated
 
 ### Review Service (Port 9095)
-- ✅ `http://localhost:9095/api/reviews` - All reviews
-- ✅ `http://localhost:9095/api/reviews/item/{itemId}` - Reviews by item
-- ✅ `http://localhost:9095/api/reviews/item/{itemId}/average-rating` - Average rating
+-  `http://localhost:9095/api/reviews` - All reviews
+-  `http://localhost:9095/api/reviews/item/{itemId}` - Reviews by item
+-  `http://localhost:9095/api/reviews/item/{itemId}/average-rating` - Average rating
 
 ### ItemService (Port 9091)
-- ✅ `http://localhost:9091/items` - All items
-- ✅ `http://localhost:9091/items/{itemId}` - Item by ID
-- ✅ `http://localhost:9091/items/user/{userEmail}` - User's items
+-  `http://localhost:9091/items` - All items
+-  `http://localhost:9091/items/{itemId}` - Item by ID
+-  `http://localhost:9091/items/user/{userEmail}` - User's items
 
 ### OrderService (Port 9092)
-- ✅ `http://localhost:9092/orders` - All orders
-- ✅ `http://localhost:9092/orders/{orderId}` - Order by ID
-- ✅ `http://localhost:9092/orders/user` - User's orders
-
-## 🧪 Testing
+-  `http://localhost:9092/orders` - All orders
+-  `http://localhost:9092/orders/{orderId}` - Order by ID
+- `http://localhost:9092/orders/user` - User's orders
+##  Testing
 
 ### Test Review Service
 ```bash
@@ -84,9 +83,9 @@ curl http://localhost:9092/orders
 curl http://localhost:3000/api/test-reviews
 ```
 
-## 📝 Review System Features
+##  Review System Features
 
-### ✅ Implemented Features
+###  Implemented Features
 1. **Review Display**: Show all reviews for items
 2. **Average Rating**: Dynamic rating calculation
 3. **Review Submission**: Add new reviews with ratings
@@ -94,12 +93,12 @@ curl http://localhost:3000/api/test-reviews
 5. **Real-time Updates**: Ratings update immediately
 6. **Error Handling**: Proper error messages and fallbacks
 
-### 🎯 Test Items with Reviews
+###  Test Items with Reviews
 - `VistaPhillips123` - 3 reviews, avg rating: 1.7
 - `Mixer123` - 1 review, avg rating: 4.0
 - `Bike123` - 1 review, avg rating: 5.0
 
-## 🛠️ Troubleshooting
+##  Troubleshooting
 
 ### Port Already in Use
 If you get "port already in use" errors:
@@ -121,6 +120,6 @@ tail -f logs/ItemService.log
 tail -f logs/OrderService.log
 ```
 
-## 📊 Current Status
+##  Current Status
 
 All services are configured with unique ports and the frontend has been updated to use the correct service URLs. The review system is fully integrated and functional. 

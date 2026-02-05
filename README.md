@@ -49,19 +49,19 @@ npm run dev
 
 ## 🏛️ Architecture Principles
 
-### ✅ **Clean Separation**
+###  **Clean Separation**
 - **Frontend**: Pure UI layer (Next.js + TypeScript)
 - **Backend**: Business logic (Spring Boot microservices)
 - **Database**: MongoDB Atlas (accessed only by services)
 
-### ✅ **Microservices Design**
+###  **Microservices Design**
 - **AuthService**: JWT authentication & user management
 - **ItemService**: Item CRUD & search functionality
 - **OrderService**: Order processing & payment integration
 - **ReviewService**: Review system & rating calculations
 - **SupportService**: AI-powered customer support
 
-### ✅ **Technology Stack**
+###  **Technology Stack**
 - **Backend**: Spring Boot 3.5.3, Java 17, MongoDB
 - **Frontend**: Next.js 14, TypeScript, Tailwind CSS
 - **Authentication**: JWT with Spring Security
@@ -231,12 +231,12 @@ tail -f backend/logs/OrderService.log
 
 ## 🎯 Key Benefits
 
-- ✅ **Scalable**: Independent service scaling
-- ✅ **Maintainable**: Clear separation of concerns
-- ✅ **Secure**: JWT authentication & proper validation
-- ✅ **Modern**: Latest Spring Boot & Next.js versions
-- ✅ **Clean**: No database access from frontend
-- ✅ **Type-Safe**: Full TypeScript support
+- **Scalable**: Independent service scaling
+- **Maintainable**: Clear separation of concerns
+- **Secure**: JWT authentication & proper validation
+- **Modern**: Latest Spring Boot & Next.js versions
+- **Clean**: No database access from frontend
+- **Type-Safe**: Full TypeScript support
 
 ---
 
