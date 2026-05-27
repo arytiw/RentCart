@@ -3,8 +3,13 @@
 import React, { useState, useRef, useEffect } from "react";
 import { FaPhone, FaEnvelope, FaClock, FaRobot, FaPaperPlane } from "react-icons/fa";
 import { buildUrl, API_CONFIG } from '../config/api';
+import { useUser } from '../providers/UserProvider';
+
+type CallTurn = { timestamp: string; role: string; text: string };
 
 export default function SupportChat() {
+  const { user } = useUser();
+  const [isMounted, setIsMounted] = useState(false);
   const [messages, setMessages] = useState<{from: "user"|"bot", text: string, timestamp: Date}[]>([
     {
       from: "bot", 
@@ -14,6 +19,11 @@ export default function SupportChat() {
   ]);
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
+  const [callPhoneNumber, setCallPhoneNumber] = useState("");
+  const [callLoading, setCallLoading] = useState(false);
+  const [activeCallSid, setActiveCallSid] = useState<string | null>(null);
+  const [callTranscript, setCallTranscript] = useState<CallTurn[]>([]);
+  const [callMeta, setCallMeta] = useState<{ phoneNumber?: string; userEmail?: string }>({});
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const chatContainerRef = useRef<HTMLDivElement>(null);
 
@@ -23,6 +33,10 @@ export default function SupportChat() {
       chatContainerRef.current.scrollTop = chatContainerRef.current.scrollHeight;
     }
   }, [messages]);
+
+  useEffect(() => {
+    setIsMounted(true);
+  }, []);
 
   // Simplified quick action buttons
   const quickActions = [
@@ -46,7 +60,8 @@ export default function SupportChat() {
         headers: {"Content-Type": "application/json"},
         body: JSON.stringify({
           message: message,
-          context: "rentcart_assistance"
+          context: "rentcart_assistance",
+          userEmail: user?.emailId || user?.email || null
         }),
       });
       
@@ -97,7 +112,102 @@ export default function SupportChat() {
   };
 
   const formatTime = (timestamp: Date) => {
+    if (!isMounted) return "--:--";
     return timestamp.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+  };
+
+  const requestAiCall = async () => {
+    if (!callPhoneNumber.trim() || callLoading) return;
+
+    setCallLoading(true);
+    try {
+      const url = buildUrl('SUPPORT_SERVICE', API_CONFIG.ENDPOINTS.SUPPORT_CALL);
+      const lastUserMessage = [...messages].reverse().find((m) => m.from === "user")?.text;
+      const res = await fetch(url, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          phoneNumber: callPhoneNumber.trim(),
+          question: lastUserMessage || "Help me with RentCart support.",
+          userEmail: user?.emailId || user?.email || null
+        }),
+      });
+
+      let callMessage = "AI call requested successfully.";
+      if (res.ok) {
+        const data = await res.json().catch(() => null);
+        if (data?.message) callMessage = data.message;
+        if (data?.callSid) {
+          setActiveCallSid(data.callSid);
+          setCallMeta({
+            phoneNumber: data.phoneNumber || callPhoneNumber.trim(),
+            userEmail: data.userEmail || (user?.emailId || user?.email || "")
+          });
+        }
+        const assistantReply = data?.assistantReply;
+        setMessages(prev => [...prev, {
+          from: "bot",
+          text: assistantReply ? `📞 ${callMessage}\n\n${assistantReply}` : `📞 ${callMessage}`,
+          timestamp: new Date()
+        }]);
+      } else {
+        const errorData = await res.json().catch(() => null);
+        const errorMessage = errorData?.message || "Could not request AI call right now.";
+        setMessages(prev => [...prev, {
+          from: "bot",
+          text: `⚠️ ${errorMessage}`,
+          timestamp: new Date()
+        }]);
+      }
+    } catch (_error) {
+      setMessages(prev => [...prev, {
+        from: "bot",
+        text: "⚠️ Could not reach support service for AI call request.",
+        timestamp: new Date()
+      }]);
+    } finally {
+      setCallLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    if (!activeCallSid) return;
+
+    let cancelled = false;
+    const fetchTranscript = async () => {
+      try {
+        const base = buildUrl('SUPPORT_SERVICE', API_CONFIG.ENDPOINTS.SUPPORT_CALL_TRANSCRIPT);
+        const url = `${base}?callSid=${encodeURIComponent(activeCallSid)}`;
+        const res = await fetch(url, { cache: "no-store" });
+        if (!res.ok) return;
+        const data = await res.json();
+        if (!cancelled && Array.isArray(data?.turns)) {
+          setCallTranscript(data.turns);
+        }
+      } catch {
+        // silent polling failure
+      }
+    };
+
+    fetchTranscript();
+    const interval = setInterval(fetchTranscript, 2500);
+    return () => {
+      cancelled = true;
+      clearInterval(interval);
+    };
+  }, [activeCallSid]);
+
+  const formatCallTimestamp = (iso: string) => {
+    if (!isMounted) return "--:--:--";
+    const date = new Date(iso);
+    if (Number.isNaN(date.getTime())) return iso;
+    return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+  };
+
+  const renderTurnLabel = (role: string) => {
+    if (role === "user") return "Caller";
+    if (role === "assistant") return "AI Agent";
+    return "System";
   };
 
   return (
@@ -217,6 +327,61 @@ export default function SupportChat() {
           <FaClock className="text-alibaba-orange text-xl mx-auto mb-2" />
           <h3 className="font-semibold text-gray-800">Response Time</h3>
           <p className="text-sm text-gray-600">Usually &lt; 2 hours</p>
+        </div>
+      </div>
+
+      <div className="mt-4 bg-white p-4 rounded-lg border border-gray-200">
+        <h3 className="font-semibold text-gray-800 mb-2">Demo: Request AI Support Call</h3>
+        <p className="text-sm text-gray-600 mb-3">
+          Enter your phone number in international format (example: +919876543210).
+        </p>
+        <div className="flex flex-col sm:flex-row gap-2">
+          <input
+            type="tel"
+            value={callPhoneNumber}
+            onChange={(e) => setCallPhoneNumber(e.target.value)}
+            placeholder="+919876543210"
+            className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-alibaba-orange"
+            disabled={callLoading}
+          />
+          <button
+            onClick={requestAiCall}
+            disabled={callLoading || !callPhoneNumber.trim()}
+            className="px-4 py-2 bg-alibaba-orange hover:bg-alibaba-orange-dark disabled:bg-gray-300 disabled:cursor-not-allowed text-white rounded-lg transition-colors duration-200 font-medium"
+          >
+            {callLoading ? "Requesting..." : "Call Me with AI Agent"}
+          </button>
+        </div>
+      </div>
+
+      <div className="mt-4 bg-white p-4 rounded-lg border border-gray-200">
+        <h3 className="font-semibold text-gray-800 mb-2">Live Call Transcript</h3>
+        <p className="text-sm text-gray-600 mb-2">
+          {activeCallSid
+            ? `Call SID: ${activeCallSid}`
+            : "Start a call to see live caller speech and AI responses."}
+        </p>
+        {(callMeta.phoneNumber || callMeta.userEmail) && (
+          <p className="text-xs text-gray-500 mb-3">
+            {callMeta.phoneNumber ? `Phone: ${callMeta.phoneNumber}` : ""}
+            {callMeta.phoneNumber && callMeta.userEmail ? " | " : ""}
+            {callMeta.userEmail ? `User: ${callMeta.userEmail}` : ""}
+          </p>
+        )}
+        <div className="max-h-72 overflow-y-auto border rounded-md bg-gray-50 p-3 space-y-2">
+          {callTranscript.length === 0 ? (
+            <p className="text-sm text-gray-500">No transcript events yet.</p>
+          ) : (
+            callTranscript.map((turn, idx) => (
+              <div key={`${turn.timestamp}-${idx}`} className="bg-white border border-gray-200 rounded-md p-2">
+                <div className="flex justify-between text-xs text-gray-500 mb-1">
+                  <span className="font-medium">{renderTurnLabel(turn.role)}</span>
+                  <span>{formatCallTimestamp(turn.timestamp)}</span>
+                </div>
+                <div className="text-sm text-gray-800 whitespace-pre-wrap">{turn.text}</div>
+              </div>
+            ))
+          )}
         </div>
       </div>
     </div>

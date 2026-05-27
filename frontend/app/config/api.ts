@@ -39,6 +39,9 @@ export const API_CONFIG = {
 
     // Support Service
     SUPPORT_CHAT: '/api/support/chat',
+    SUPPORT_CALL: '/api/support/call',
+    SUPPORT_CALL_STATUS: '/api/support/call/status',
+    SUPPORT_CALL_TRANSCRIPT: '/api/support/call/transcript',
   }
 };
 

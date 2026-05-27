@@ -30,7 +30,7 @@ enum STEPS {
 
 const RentPage = () => {
   const router = useRouter();
-  const { token, user: currentUser } = useUser();
+  const { token, user: currentUser, isLoading: authLoading } = useUser();
   const [isLoading, setIsLoading] = useState(false);
   const [step, setStep] = useState(STEPS.CATEGORY);
   const [features, setFeatures] = useState<string[]>([]);
@@ -125,6 +125,25 @@ const RentPage = () => {
 
     setIsLoading(true);
 
+    if (authLoading) {
+      toast.error("Please wait while we verify your session...");
+      setIsLoading(false);
+      return;
+    }
+
+    // Use token from context, fallback to localStorage (guard against "null" string)
+    const localStorageToken = localStorage.getItem('authToken');
+    const safeLocalToken = (localStorageToken && localStorageToken !== 'null' && localStorageToken !== 'undefined')
+      ? localStorageToken
+      : null;
+    const authToken = token || safeLocalToken;
+
+    if (!authToken) {
+      toast.error("Please login to create an item listing");
+      setIsLoading(false);
+      return;
+    }
+
     const formData = {
       ...data,
       images: data.imageSrc ? [data.imageSrc] : [],
@@ -136,7 +155,7 @@ const RentPage = () => {
 
     axios.post('/api/items', formData, {
       headers: {
-        'Authorization': `Bearer ${token}`,
+        'Authorization': `Bearer ${authToken}`,
         'Content-Type': 'application/json',
       }
     })

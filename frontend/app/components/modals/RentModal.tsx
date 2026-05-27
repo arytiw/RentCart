@@ -35,7 +35,7 @@ enum STEPS {
 const RentModal = () => {
   const router = useRouter();
   const rentModal = useRentModal();
-  const { token, user: currentUser } = useUser();
+  const { token, user: currentUser, isLoading: authLoading } = useUser();
   const [description, setDescription] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [step, setStep] = useState(STEPS.CATEGORY);
@@ -198,12 +198,24 @@ const RentModal = () => {
 
     setIsLoading(true);
 
+    // Wait for auth context to finish loading before checking token
+    if (authLoading) {
+      toast.error("Please wait while we verify your session...");
+      setIsLoading(false);
+      return;
+    }
+
     console.log("Submitting item data:", data);
     
     // Use token from useUser hook, fallback to localStorage
-    const authToken = token || localStorage.getItem('authToken');
+    // Guard against the string "null" being stored in localStorage from a previous bug
+    const localStorageToken = localStorage.getItem('authToken');
+    const safeLocalToken = (localStorageToken && localStorageToken !== 'null' && localStorageToken !== 'undefined')
+      ? localStorageToken
+      : null;
+    const authToken = token || safeLocalToken;
     console.log("Token from useUser hook:", token ? token.substring(0, 20) + "..." : "No token from hook");
-    console.log("Token from localStorage:", localStorage.getItem('authToken') ? localStorage.getItem('authToken')?.substring(0, 20) + "..." : "No token in localStorage");
+    console.log("Token from localStorage:", safeLocalToken ? safeLocalToken.substring(0, 20) + "..." : "No token in localStorage");
     console.log("Final authToken:", authToken ? authToken.substring(0, 20) + "..." : "No final token");
 
     if (!authToken) {

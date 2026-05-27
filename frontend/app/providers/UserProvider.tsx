@@ -1,6 +1,6 @@
 'use client';
 // @ts-nocheck
-import { createContext, useContext, useEffect, useState } from 'react';
+import { createContext, useContext, useEffect, useRef, useState } from 'react';
 import getCurrentUser from "@/app/actions/getCurrentUser";
 
 interface User {
@@ -32,12 +32,23 @@ export const UserProvider = ({ children }: { children: any }) => {
   const [user, setUser] = useState<User | null>(null);
   const [token, setToken] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  // Track whether the initial hydration from localStorage is complete
+  const initializedRef = useRef(false);
 
   useEffect(() => {
+    // Clean up any stale "null" string that may have been stored previously
     const storedToken = localStorage.getItem('authToken');
-    if (storedToken) {
-      setToken(storedToken);
-      getCurrentUser(storedToken).then(userData => {
+    if (storedToken === 'null' || storedToken === 'undefined') {
+      localStorage.removeItem('authToken');
+    }
+
+    const validToken = storedToken && storedToken !== 'null' && storedToken !== 'undefined'
+      ? storedToken
+      : null;
+
+    if (validToken) {
+      setToken(validToken);
+      getCurrentUser(validToken).then(userData => {
         if (userData) {
           setUser(userData);
         } else {
@@ -47,6 +58,7 @@ export const UserProvider = ({ children }: { children: any }) => {
           localStorage.removeItem('authToken');
           localStorage.removeItem('user');
         }
+        initializedRef.current = true;
         setIsLoading(false);
       }).catch(() => {
         // Token validation failed, clear everything
@@ -54,16 +66,22 @@ export const UserProvider = ({ children }: { children: any }) => {
         setToken(null);
         localStorage.removeItem('authToken');
         localStorage.removeItem('user');
+        initializedRef.current = true;
         setIsLoading(false);
       });
     } else {
       setUser(null);
       setToken(null);
+      initializedRef.current = true;
       setIsLoading(false);
     }
   }, []);
 
   useEffect(() => {
+    // Only sync to localStorage after initial hydration is complete
+    // This prevents wiping a valid token during the async initialization phase
+    if (!initializedRef.current) return;
+
     // Save user and token to localStorage
     if (user) {
       localStorage.setItem('user', JSON.stringify(user));
