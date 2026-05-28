@@ -1,155 +1,162 @@
 // @ts-nocheck
 "use client";
 
-import { useCallback, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { AiOutlineMenu } from "react-icons/ai";
-import { signOut } from "next-auth/react";
+import { FiLogOut, FiUser, FiPackage, FiPlusCircle, FiKey } from "react-icons/fi";
 import { useRouter } from "next/navigation";
 
-
-import { SafeUser } from "@/app/types";
-import { useUser } from '@/app/providers/UserProvider';
+import { useUser } from "@/app/providers/UserProvider";
 
 import MenuItem from "./MenuItem";
 import Avatar from "../Avatar";
-import ChangePasswordModal from '../modals/ChangePasswordModal';
-
-interface UserMenuProps {
-  currentUser?: SafeUser | null;
-}
+import ChangePasswordModal from "../modals/ChangePasswordModal";
 
 const UserMenu: React.FC = () => {
   const router = useRouter();
-
   const { user, logout } = useUser();
   const [isOpen, setIsOpen] = useState(false);
   const [showChangePassword, setShowChangePassword] = useState(false);
+  const ref = useRef<HTMLDivElement>(null);
 
-  const toggleOpen = useCallback(() => {
-    setIsOpen((value) => !value);
-  }, []);
+  const toggleOpen = useCallback(() => setIsOpen((v) => !v), []);
 
   const onRent = useCallback(() => {
-    if (!user) {
-      return router.push('/login');
-    }
-    router.push('/rent');
+    if (!user) return router.push("/login");
+    router.push("/rent");
   }, [router, user]);
 
+  useEffect(() => {
+    const onClick = (e: MouseEvent) => {
+      if (ref.current && !ref.current.contains(e.target as Node)) {
+        setIsOpen(false);
+      }
+    };
+    document.addEventListener("mousedown", onClick);
+    return () => document.removeEventListener("mousedown", onClick);
+  }, []);
+
+  const displayName =
+    user?.firstName || user?.username || user?.emailId?.split("@")[0] || "Menu";
+
   return (
-    <div className="relative">
-      <div className="flex flex-row items-center gap-3">
-        <div
+    <div className="relative" ref={ref}>
+      <div className="flex items-center gap-2">
+        <button
           onClick={onRent}
-          className="
-            hidden
-            md:block
-            text-sm 
-            font-semibold 
-            py-2
-            px-5 
-            rounded-lg
-            text-white
-            bg-alibaba-black
-            border-2
-            border-white
-            hover:bg-alibaba-gray-800
-            hover:border-alibaba-gray-800
-            hover:shadow-lg
-            transform
-            hover:scale-105
-            transition-all
-            duration-200
-            cursor-pointer
-            shadow-md
-            hover:shadow-xl
-          "
+          className="hidden md:inline-flex items-center gap-1.5 px-4 py-2 text-sm font-semibold rounded-full bg-brand text-white hover:bg-brand-600 hover:shadow-glow transition-all duration-200 active:scale-[0.98]"
+          data-testid="nav-rent-cta"
         >
-          Rent your stuff
-        </div>
-        <div
+          <FiPlusCircle size={16} />
+          List item
+        </button>
+
+        <button
           onClick={toggleOpen}
-          className="
-          p-3
-          md:py-2.5
-          md:px-4
-          border-2
-          border-white 
-          flex 
-          flex-row 
-          items-center
-          hover:bg-alibaba-orange-dark
-          hover:border-alibaba-orange-dark
-          hover:shadow-lg
-          transform
-          hover:scale-105
-          gap-3 
-          rounded-lg
-          cursor-pointer
-          bg-white
-          transition-all
-          duration-200
-          shadow-md
-          hover:shadow-xl
-          "
+          aria-expanded={isOpen}
+          aria-haspopup="menu"
+          className="inline-flex items-center gap-2 px-2 py-1.5 md:pl-2 md:pr-3 rounded-full border border-ink-200 bg-white hover:border-ink-300 hover:shadow-softer transition-all duration-200 active:scale-[0.98]"
+          data-testid="user-menu-toggle"
         >
-          <AiOutlineMenu className="text-alibaba-black" />
-          <div className="hidden md:block">
+          <span className="inline-flex items-center justify-center h-7 w-7 rounded-full hover:bg-ink/5">
+            <AiOutlineMenu className="text-ink-600" size={16} />
+          </span>
+          <span className="hidden md:block">
             <Avatar src={user?.image} />
-          </div>
+          </span>
           {user && (
-            <span className="ml-2 font-semibold text-alibaba-black">
-              {user.firstName || user.username || user.emailId}
+            <span className="hidden md:block text-sm font-medium text-ink pr-1 max-w-[120px] truncate">
+              {displayName}
             </span>
           )}
-        </div>
+        </button>
       </div>
+
       {isOpen && (
         <div
-          className="
-            absolute 
-            rounded-xl 
-            shadow-xl
-            w-[40vw]
-            md:w-3/4 
-            bg-white 
-            overflow-hidden 
-            right-0 
-            top-12 
-            text-sm
-            border-2
-            border-alibaba-gray-200
-          "
+          role="menu"
+          className="absolute right-0 top-12 w-64 origin-top-right rounded-2xl bg-white border border-ink-100 shadow-lift overflow-hidden animate-fade-in-up"
+          data-testid="user-menu-dropdown"
         >
-          <div className="flex flex-col cursor-pointer">
-            {user ? (
-              <>
+          {user ? (
+            <>
+              <div className="px-4 py-3 bg-cream-100/60 border-b border-ink-100">
+                <p className="text-xs uppercase tracking-wider text-ink-400 font-medium">
+                  Signed in as
+                </p>
+                <p className="text-sm font-semibold text-ink truncate mt-0.5">
+                  {user.emailId || user.email || displayName}
+                </p>
+              </div>
+              <div className="py-1.5">
                 <MenuItem
                   label="My Dashboard"
-                  onClick={() => router.push("/dashboard")}
+                  icon={<FiUser size={16} />}
+                  onClick={() => {
+                    setIsOpen(false);
+                    router.push("/dashboard");
+                  }}
                 />
                 <MenuItem
                   label="Rental Bookings"
-                  onClick={() => router.push("/rental-bookings")}
+                  icon={<FiPackage size={16} />}
+                  onClick={() => {
+                    setIsOpen(false);
+                    router.push("/rental-bookings");
+                  }}
                 />
-                <MenuItem label="Rent your stuff" onClick={() => router.push('/rent')} />
-                <MenuItem label="Change Password" onClick={() => setShowChangePassword(true)} />
-                <hr className="border-alibaba-gray-200" />
-                <MenuItem label="Logout" onClick={logout} />
-              </>
-            ) : (
-              <>
-                <MenuItem label="Login" onClick={() => router.push('/login')} />
-                <MenuItem label="Sign up" onClick={() => router.push('/register')} />
-              </>
-            )}
-          </div>
+                <MenuItem
+                  label="List your item"
+                  icon={<FiPlusCircle size={16} />}
+                  onClick={() => {
+                    setIsOpen(false);
+                    router.push("/rent");
+                  }}
+                />
+                <MenuItem
+                  label="Change Password"
+                  icon={<FiKey size={16} />}
+                  onClick={() => {
+                    setIsOpen(false);
+                    setShowChangePassword(true);
+                  }}
+                />
+                <div className="my-1 border-t border-ink-100" />
+                <MenuItem
+                  label="Logout"
+                  icon={<FiLogOut size={16} />}
+                  onClick={() => {
+                    setIsOpen(false);
+                    logout();
+                  }}
+                  danger
+                />
+              </div>
+            </>
+          ) : (
+            <div className="py-1.5">
+              <MenuItem
+                label="Login"
+                onClick={() => {
+                  setIsOpen(false);
+                  router.push("/login");
+                }}
+              />
+              <MenuItem
+                label="Create an account"
+                onClick={() => {
+                  setIsOpen(false);
+                  router.push("/register");
+                }}
+              />
+            </div>
+          )}
         </div>
       )}
       <ChangePasswordModal
         isOpen={showChangePassword}
         onClose={() => setShowChangePassword(false)}
-        email={user?.emailId || ''}
+        email={user?.emailId || ""}
       />
     </div>
   );

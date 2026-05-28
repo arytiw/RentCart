@@ -1,19 +1,15 @@
-'use client';
+"use client";
 
-import { useCallback, useState } from "react";
+import { useState } from "react";
 import { toast } from "react-hot-toast";
-import { 
-  FieldValues, 
-  SubmitHandler, 
-  useForm
-} from "react-hook-form";
+import { FieldValues, SubmitHandler, useForm } from "react-hook-form";
 import { FcGoogle } from "react-icons/fc";
 import { AiFillGithub } from "react-icons/ai";
-import { FaShoppingCart, FaShieldAlt, FaClock, FaUsers } from "react-icons/fa";
+import { FaShieldAlt, FaClock, FaUsers } from "react-icons/fa";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 
-import { useUser } from '@/app/providers/UserProvider';
+import { useUser } from "@/app/providers/UserProvider";
 import getCurrentUser from "@/app/actions/getCurrentUser";
 import { buildUrl, API_CONFIG } from "@/app/config/api";
 
@@ -25,272 +21,201 @@ const LoginPage = () => {
   const [isLoading, setIsLoading] = useState(false);
   const { setUser, setToken } = useUser();
 
-  const { 
-    register, 
+  const {
+    register,
     handleSubmit,
-    formState: {
-      errors,
-    },
+    formState: { errors },
   } = useForm<FieldValues>({
-    defaultValues: {
-      email: '',
-      password: ''
-    },
+    defaultValues: { email: "", password: "" },
   });
-  
+
   const onSubmit: SubmitHandler<FieldValues> = async (data) => {
     setIsLoading(true);
-
-    // Try both emailId and username for login, fallback to emailId
-    const payload = {
-      emailId: data.email,
-      password: data.password
-    };
+    const payload = { emailId: data.email, password: data.password };
 
     try {
-      const url = buildUrl('AUTH_SERVICE', API_CONFIG.ENDPOINTS.LOGIN);
+      const url = buildUrl("AUTH_SERVICE", API_CONFIG.ENDPOINTS.LOGIN);
       const response = await fetch(url, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payload),
       });
-      
       setIsLoading(false);
-      
+
       if (response.ok) {
-        // Handle both JSON and text responses
-        const contentType = response.headers.get('content-type');
+        const contentType = response.headers.get("content-type");
         let token;
-        
-        if (contentType && contentType.includes('application/json')) {
+        if (contentType && contentType.includes("application/json")) {
           const jsonResponse = await response.json();
           token = jsonResponse.token || jsonResponse;
         } else {
           token = await response.text();
         }
-        
         if (token) {
           setToken(token);
-          // Fetch the full user profile
           const fullUser = await getCurrentUser(token);
           setUser(fullUser);
-          toast.success('Logged in successfully');
+          toast.success("Welcome back!");
           router.refresh();
-          router.push('/'); // Redirect to home page
+          router.push("/");
         } else {
-          toast.error('Invalid response from server');
+          toast.error("Invalid response from server");
         }
       } else if (response.status === 401) {
-        toast.error('Invalid credentials');
+        toast.error("Invalid credentials");
       } else {
         const errorText = await response.text();
         toast.error(`Login failed: ${errorText}`);
       }
-    } catch (error) {
+    } catch {
       setIsLoading(false);
-      console.error('Login error:', error);
-      toast.error('Login failed. Please check your connection.');
+      toast.error("Login failed. Please check your connection.");
     }
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
-      <div className="max-w-5xl w-full">
-        <div className="bg-white rounded-3xl shadow-2xl overflow-hidden flex flex-col lg:flex-row min-h-[650px]">
-          
-          {/* Left Side - RentCart Information */}
-          <div className="
-            hidden
-            lg:flex
-            lg:w-1/2
-            bg-gradient-to-br from-orange-500 to-orange-600
-            flex-col
-            justify-center
-            items-center
-            text-white
-            p-8
-            relative
-            overflow-hidden
-          ">
-            {/* Background Pattern */}
-            <div className="absolute inset-0 opacity-10">
-              <div className="absolute top-12 left-12 w-32 h-32 bg-white rounded-full"></div>
-              <div className="absolute bottom-20 right-12 w-24 h-24 bg-white rounded-full"></div>
-              <div className="absolute top-1/2 left-1/3 w-16 h-16 bg-white rounded-full"></div>
-              <div className="absolute top-1/4 right-1/4 w-12 h-12 bg-white rounded-full"></div>
-            </div>
-            
-            {/* Content */}
-            <div className="relative z-10 text-center max-w-sm">
-              <div className="flex items-center justify-center gap-3 mb-6">
-                <FaShoppingCart size={36} className="text-white" />
-                <h1 className="text-3xl font-bold">RentCart</h1>
-              </div>
-              
-              <h2 className="text-xl font-bold mb-4">
-                Welcome to the Future of Renting
-              </h2>
-              
-              <p className="text-sm mb-6 leading-relaxed opacity-90">
-                Join thousands of users who trust RentCart for their rental needs. 
-                Quality items, instant booking, and secure transactions.
-              </p>
-              
-              {/* Features */}
-              <div className="space-y-3 mb-6">
-                <div className="flex items-center gap-3">
-                  <FaShieldAlt size={18} className="text-orange-200" />
-                  <span className="text-left text-sm">100% Verified Items & Secure Payments</span>
-                </div>
-                <div className="flex items-center gap-3">
-                  <FaClock size={18} className="text-orange-200" />
-                  <span className="text-left text-sm">24/7 Instant Booking Available</span>
-                </div>
-                <div className="flex items-center gap-3">
-                  <FaUsers size={18} className="text-orange-200" />
-                  <span className="text-left text-sm">Trusted Community of Renters</span>
-                </div>
-              </div>
-              
-              {/* Stats */}
-              <div className="grid grid-cols-3 gap-4">
-                <div className="text-center">
-                  <div className="text-2xl font-bold">10K+</div>
-                  <div className="text-xs opacity-80">Happy Users</div>
-                </div>
-                <div className="text-center">
-                  <div className="text-2xl font-bold">50K+</div>
-                  <div className="text-xs opacity-80">Items Rented</div>
-                </div>
-                <div className="text-center">
-                  <div className="text-2xl font-bold">99%</div>
-                  <div className="text-xs opacity-80">Satisfaction</div>
-                </div>
-              </div>
-            </div>
+    <div className="min-h-[88vh] -mt-16 grid lg:grid-cols-2 bg-cream" data-testid="login-page">
+      {/* Left brand panel */}
+      <aside className="hidden lg:flex relative bg-ink text-white p-12 overflow-hidden">
+        <div className="absolute inset-0 bg-radial-brand" />
+        <div className="absolute -bottom-24 -right-16 h-80 w-80 rounded-full bg-brand/25 blur-3xl" />
+        <div className="absolute top-1/4 -left-12 h-44 w-44 rounded-full bg-brand/10 blur-2xl" />
+
+        <div className="relative max-w-md self-center">
+          <div className="inline-flex items-center gap-2.5">
+            <span className="inline-flex h-10 w-10 items-center justify-center rounded-xl bg-brand">
+              <svg viewBox="0 0 24 24" fill="none" className="h-5 w-5 text-white" aria-hidden="true">
+                <path d="M3 5h2l2.4 10.2a2 2 0 0 0 2 1.55h8.2a2 2 0 0 0 1.96-1.6L21 8H6"
+                  stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                <circle cx="10" cy="20" r="1.4" fill="currentColor" />
+                <circle cx="17" cy="20" r="1.4" fill="currentColor" />
+              </svg>
+            </span>
+            <span className="font-display font-bold text-2xl tracking-tighter2">
+              Rent<span className="text-brand">Cart</span>
+            </span>
           </div>
 
-          {/* Right Side - Form */}
-          <div className="
-            w-full
-            lg:w-1/2
-            flex
-            flex-col
-            justify-center
-            p-6
-            lg:p-8
-            relative
-            max-h-full
-            overflow-y-auto
-          ">
-            {/* Mobile Logo */}
-            <div className="lg:hidden flex items-center justify-center gap-2 mb-6">
-              <FaShoppingCart size={28} className="text-orange-500" />
-              <h1 className="text-xl font-bold text-gray-900">RentCart</h1>
-            </div>
+          <h1 className="font-display font-semibold text-5xl tracking-tightest leading-[0.95] mt-14">
+            Rent <span className="text-brand">anything.</span>
+            <br /> Anytime.
+          </h1>
+          <p className="mt-4 text-ink-300 max-w-sm leading-relaxed">
+            Premium peer-to-peer rentals. Verified items, instant booking, and a community you can trust.
+          </p>
 
-            {/* Form Content */}
-            <div className="flex-1 flex flex-col justify-center min-h-0">
-              <div className="mb-6">
-                <p className="text-sm text-gray-600 mb-2">
-                  Welcome back! Please enter your details.
-                </p>
-                <h2 className="text-2xl font-bold text-gray-900">
-                  Welcome Back
-                </h2>
-              </div>
+          <ul className="mt-10 space-y-3 text-sm">
+            <li className="flex items-center gap-3 text-ink-200">
+              <span className="inline-flex h-7 w-7 items-center justify-center rounded-full bg-white/5 border border-white/10">
+                <FaShieldAlt size={12} className="text-brand" />
+              </span>
+              Verified items & secure payments
+            </li>
+            <li className="flex items-center gap-3 text-ink-200">
+              <span className="inline-flex h-7 w-7 items-center justify-center rounded-full bg-white/5 border border-white/10">
+                <FaClock size={12} className="text-brand" />
+              </span>
+              24/7 instant booking
+            </li>
+            <li className="flex items-center gap-3 text-ink-200">
+              <span className="inline-flex h-7 w-7 items-center justify-center rounded-full bg-white/5 border border-white/10">
+                <FaUsers size={12} className="text-brand" />
+              </span>
+              Trusted community of renters
+            </li>
+          </ul>
 
-              {/* Login Form */}
-              <div className="flex flex-col gap-6">
-                <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
-                  <div className="space-y-4">
-                    <Input
-                      id="email"
-                      label="Email"
-                      disabled={isLoading}
-                      register={register}  
-                      errors={errors}
-                      required
-                      noValidation={true}
-                    />
-                    <Input
-                      id="password"
-                      label="Password"
-                      type="password"
-                      disabled={isLoading}
-                      register={register}
-                      errors={errors}
-                      required
-                      noValidation={true}
-                    />
-                    <div className="text-right">
-                      <Link
-                        href="/forgot-password"
-                        className="text-orange-600 cursor-pointer text-sm hover:underline font-medium hover:text-orange-700 transition-colors duration-200"
-                      >
-                        Forgot Password?
-                      </Link>
-                    </div>
-                  </div>
-                  
-                  {/* Continue Button */}
-                  <div className="pt-4">
-                    <Button 
-                      disabled={isLoading} 
-                      label="Continue" 
-                      onClick={() => {}} // Empty onClick since form handles submission
-                    />
-                  </div>
-                </form>
+          <div className="mt-10 pt-6 border-t border-white/10 grid grid-cols-3 gap-4">
+            {[
+              ["10K+", "Happy users"],
+              ["50K+", "Items rented"],
+              ["99%", "Satisfaction"],
+            ].map(([v, l]) => (
+              <div key={l}>
+                <div className="font-display font-bold text-2xl text-white">{v}</div>
+                <div className="text-[11px] uppercase tracking-wider text-ink-400 mt-0.5">{l}</div>
               </div>
-
-              {/* Footer */}
-              <div className="flex flex-col gap-4 mt-6">
-                <div className="relative">
-                  <div className="absolute inset-0 flex items-center">
-                    <div className="w-full border-t border-gray-300"></div>
-                  </div>
-                  <div className="relative flex justify-center text-sm">
-                    <span className="px-4 bg-white text-gray-500 font-medium">Or continue with</span>
-                  </div>
-                </div>
-                
-                <div className="space-y-3">
-                  <button 
-                    onClick={() => toast.info('Google sign-in coming soon!')}
-                    className="w-full flex items-center justify-center gap-3 px-4 py-3 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors duration-200 font-medium text-gray-700"
-                  >
-                    <FcGoogle size={20} />
-                    Continue with Google
-                  </button>
-                  <button 
-                    onClick={() => toast.info('Github sign-in coming soon!')}
-                    className="w-full flex items-center justify-center gap-3 px-4 py-3 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors duration-200 font-medium text-gray-700"
-                  >
-                    <AiFillGithub size={20} />
-                    Continue with Github
-                  </button>
-                </div>
-                
-                <div className="text-gray-500 text-center mt-4 font-medium">
-                  <p className="text-sm">First time using RentCart?
-                    <Link 
-                      href="/register"
-                      className="text-orange-600 cursor-pointer hover:text-orange-700 ml-1 font-semibold hover:underline transition-colors duration-200"
-                    > 
-                      Create an account
-                    </Link>
-                  </p>
-                </div>
-              </div>
-            </div>
+            ))}
           </div>
         </div>
-      </div>
+      </aside>
+
+      {/* Right form */}
+      <main className="flex items-center justify-center p-6 sm:p-10">
+        <div className="w-full max-w-md">
+          <div className="lg:hidden mb-6 flex items-center gap-2">
+            <span className="inline-flex h-8 w-8 items-center justify-center rounded-lg bg-brand text-white">
+              <svg viewBox="0 0 24 24" fill="none" className="h-4 w-4" aria-hidden="true">
+                <path d="M3 5h2l2.4 10.2a2 2 0 0 0 2 1.55h8.2a2 2 0 0 0 1.96-1.6L21 8H6"
+                  stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+              </svg>
+            </span>
+            <span className="font-display font-bold text-lg text-ink">
+              Rent<span className="text-brand">Cart</span>
+            </span>
+          </div>
+
+          <p className="text-xs font-semibold uppercase tracking-[0.18em] text-brand mb-2">
+            Account
+          </p>
+          <h2 className="font-display font-semibold text-3xl text-ink tracking-tighter2">
+            Welcome back
+          </h2>
+          <p className="mt-1.5 text-sm text-ink-500">
+            Sign in to continue with RentCart.
+          </p>
+
+          <form onSubmit={handleSubmit(onSubmit)} className="mt-7 space-y-4">
+            <Input id="email" label="Email" disabled={isLoading} register={register} errors={errors} required noValidation />
+            <Input id="password" label="Password" type="password" disabled={isLoading} register={register} errors={errors} required noValidation />
+
+            <div className="text-right">
+              <Link href="/forgot-password" className="text-sm font-semibold text-brand hover:text-brand-600 transition-colors">
+                Forgot password?
+              </Link>
+            </div>
+
+            <div className="pt-1">
+              <Button disabled={isLoading} label={isLoading ? "Signing in…" : "Sign in"} type="submit" onClick={() => {}} data-testid="login-page-submit" />
+            </div>
+          </form>
+
+          <div className="relative my-6">
+            <div className="absolute inset-0 flex items-center">
+              <div className="w-full border-t border-ink-100" />
+            </div>
+            <div className="relative flex justify-center">
+              <span className="px-3 bg-cream text-[11px] text-ink-400 uppercase tracking-widest font-semibold">
+                or continue with
+              </span>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-2 gap-3">
+            <button
+              onClick={() => toast("Google sign-in coming soon!")}
+              className="inline-flex items-center justify-center gap-2 h-11 rounded-xl border border-ink-200 hover:border-ink hover:bg-cream-200 text-sm font-medium text-ink transition-all"
+            >
+              <FcGoogle size={18} /> Google
+            </button>
+            <button
+              onClick={() => toast("GitHub sign-in coming soon!")}
+              className="inline-flex items-center justify-center gap-2 h-11 rounded-xl border border-ink-200 hover:border-ink hover:bg-cream-200 text-sm font-medium text-ink transition-all"
+            >
+              <AiFillGithub size={18} /> GitHub
+            </button>
+          </div>
+
+          <p className="mt-6 text-center text-sm text-ink-500">
+            First time on RentCart?{" "}
+            <Link href="/register" className="font-semibold text-brand hover:text-brand-600 transition-colors">
+              Create an account
+            </Link>
+          </p>
+        </div>
+      </main>
     </div>
   );
 };
 
-export default LoginPage; 
+export default LoginPage;

@@ -1,73 +1,50 @@
 "use client";
 
-import CategoryInput from "@/app/components/inputs/CategoryInput";
+import Link from "next/link";
 import { categories } from "@/app/components/navbar/Categories";
+import { FiArrowUpRight } from "react-icons/fi";
 
 const CategoriesSection = () => {
   return (
-    <div className="max-w-6xl mx-auto px-4">
-      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6">
-        {categories.map((category) => (
-          <a
+    <div className="max-w-7xl mx-auto">
+      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-3 md:gap-4">
+        {categories.map((category, idx) => (
+          <Link
             key={category.label}
             href={`/items?category=${encodeURIComponent(category.label)}`}
-            className="block group"
+            className="group block focus-visible:outline-none"
+            style={{ animationDelay: `${idx * 40}ms` }}
+            data-testid={`category-card-${category.label.toLowerCase().replace(/\s+/g, "-")}`}
           >
-            <div className="
-              relative
-              overflow-hidden
-              rounded-2xl
-              bg-white
-              p-6
-              border-2
-              border-alibaba-gray-200
-              hover:border-alibaba-orange
-              hover:shadow-xl
-              transform
-              hover:scale-105
-              transition-all
-              duration-300
-              cursor-pointer
-              group-hover:bg-gradient-to-br group-hover:from-alibaba-orange/5 group-hover:to-transparent
-            ">
-              {/* Decorative Background Element */}
-              <div className="absolute top-0 right-0 w-16 h-16 bg-alibaba-orange/10 rounded-full -translate-y-8 translate-x-8 group-hover:scale-150 transition-transform duration-300"></div>
-              
-              {/* Icon Container */}
-              <div className="relative z-10 flex flex-col items-center gap-4">
-                <div className="
-                  w-16 h-16
-                  bg-gradient-to-br from-alibaba-orange/10 to-alibaba-orange/5
-                  rounded-2xl
-                  flex items-center justify-center
-                  group-hover:bg-gradient-to-br group-hover:from-alibaba-orange/20 group-hover:to-alibaba-orange/10
-                  transition-all duration-300
-                ">
-                  <category.icon 
-                    size={32} 
-                    className="text-alibaba-gray-600 group-hover:text-alibaba-orange transition-colors duration-300" 
-                  />
-                </div>
-                
-                {/* Category Name */}
-                <div className="text-center">
-                  <h3 className="font-bold text-alibaba-black group-hover:text-alibaba-orange transition-colors duration-300">
-                    {category.label}
-                  </h3>
-                  <p className="text-xs text-alibaba-gray-500 mt-1 line-clamp-2">
-                    {category.description}
-                  </p>
-                </div>
+            <div className="relative h-full overflow-hidden rounded-2xl bg-white border border-ink-100 p-5 hover:border-ink-300 hover:shadow-card transition-all duration-300 animate-fade-in-up">
+              {/* Brand accent corner */}
+              <div className="pointer-events-none absolute -top-10 -right-10 h-28 w-28 rounded-full bg-brand/10 blur-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+
+              {/* Arrow */}
+              <span className="absolute top-3.5 right-3.5 inline-flex h-7 w-7 items-center justify-center rounded-full bg-cream-200 text-ink-400 group-hover:bg-ink group-hover:text-white transition-all duration-300">
+                <FiArrowUpRight size={14} />
+              </span>
+
+              {/* Icon tile */}
+              <div className="inline-flex h-11 w-11 items-center justify-center rounded-xl bg-cream-200 border border-ink-100 mb-4 group-hover:bg-brand/10 group-hover:border-brand/20 transition-all duration-300">
+                <category.icon
+                  size={20}
+                  className="text-ink-600 group-hover:text-brand transition-colors duration-300"
+                />
               </div>
-              
-              {/* Hover Effect Overlay */}
-              <div className="absolute inset-0 bg-gradient-to-t from-alibaba-orange/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+
+              <h3 className="font-display font-semibold text-[15px] text-ink mb-1 group-hover:text-brand transition-colors duration-300">
+                {category.label}
+              </h3>
+              <p className="text-xs text-ink-500 leading-relaxed line-clamp-2">
+                {category.description}
+              </p>
             </div>
-          </a>
+          </Link>
         ))}
       </div>
     </div>
   );
 };
 
-export default CategoriesSection; 
+export default CategoriesSection;

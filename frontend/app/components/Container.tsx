@@ -1,25 +1,27 @@
-'use client';
+"use client";
+
+import { cn } from "@/app/lib/cn";
 
 interface ContainerProps {
   children: React.ReactNode;
+  className?: string;
 }
 
-const Container: React.FC<ContainerProps> = ({ children }) => {
-  return ( 
+/**
+ * Layout container — generous gutters, no opinionated background so each
+ * page can compose its own surface.
+ */
+const Container: React.FC<ContainerProps> = ({ children, className }) => {
+  return (
     <div
-      className="
-        max-w-[2520px]
-        mx-auto
-        xl:px-20 
-        md:px-10
-        sm:px-2
-        px-4
-        bg-white
-      "
+      className={cn(
+        "max-w-[1440px] mx-auto w-full px-4 sm:px-6 md:px-10 xl:px-16",
+        className
+      )}
     >
       {children}
     </div>
-   );
-}
- 
+  );
+};
+
 export default Container;
