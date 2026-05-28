@@ -1,76 +1,52 @@
-'use client';
+"use client";
 
-import qs from 'query-string';
-import { useRouter, useSearchParams } from 'next/navigation';
-import { useCallback } from 'react';
-
-import { IconType } from 'react-icons';
+import qs from "query-string";
+import { useRouter, useSearchParams } from "next/navigation";
+import { useCallback } from "react";
+import { IconType } from "react-icons";
+import { cn } from "@/app/lib/cn";
 
 interface CategoryBoxProps {
-  icon: IconType,
+  icon: IconType;
   label: string;
   selected?: boolean;
 }
 
-const CategoryBox: React.FC<CategoryBoxProps> = ({
-  icon: Icon,
-  label,
-  selected,
-}) => {
+const CategoryBox: React.FC<CategoryBoxProps> = ({ icon: Icon, label, selected }) => {
   const router = useRouter();
   const params = useSearchParams();
 
   const handleClick = useCallback(() => {
     let currentQuery = {};
-    
-    if (params) {
-      currentQuery = qs.parse(params.toString())
-    }
+    if (params) currentQuery = qs.parse(params.toString());
 
-    const updatedQuery: any = {
-      ...currentQuery,
-      category: label
-    }
+    const updatedQuery: any = { ...currentQuery, category: label };
 
-    if (params?.get('category') === label) {
-      delete updatedQuery.category;
-    }
+    if (params?.get("category") === label) delete updatedQuery.category;
 
-    const url = qs.stringifyUrl({
-      url: '/',
-      query: updatedQuery
-    }, { skipNull: true });
+    const url = qs.stringifyUrl(
+      { url: "/", query: updatedQuery },
+      { skipNull: true }
+    );
 
     router.push(url);
   }, [label, router, params]);
 
-  return ( 
-    <div
+  return (
+    <button
       onClick={handleClick}
-      className={`
-        flex 
-        flex-col 
-        items-center 
-        justify-center 
-        gap-3
-        p-4
-        border-b-2
-        hover:text-alibaba-orange
-        hover:border-b-alibaba-orange
-        transition-all
-        duration-200
-        cursor-pointer
-        transform
-        hover:scale-105
-        ${selected ? 'border-b-alibaba-orange text-alibaba-orange' : 'border-transparent text-alibaba-gray-500'}
-      `}
+      className={cn(
+        "shrink-0 inline-flex items-center gap-2 px-4 py-2.5 rounded-full text-sm font-medium transition-all duration-200 border",
+        selected
+          ? "bg-ink text-white border-ink shadow-soft"
+          : "bg-white text-ink-600 border-ink-200 hover:border-ink hover:text-ink"
+      )}
+      data-testid={`category-pill-${label.toLowerCase().replace(/\s+/g, "-")}`}
     >
-      <Icon size={28} className={`${selected ? 'text-alibaba-orange' : 'text-alibaba-gray-500'}`} />
-      <div className="font-semibold text-sm">
-        {label}
-      </div>
-    </div>
-   );
-}
- 
+      <Icon size={16} className={cn(selected ? "text-brand" : "text-ink-400")} />
+      <span>{label}</span>
+    </button>
+  );
+};
+
 export default CategoryBox;

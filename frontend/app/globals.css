@@ -2,6 +2,24 @@
 @tailwind components;
 @tailwind utilities;
 
+/* ===========================================================
+   RentCart — Premium Theme Tokens
+   Preserves brand orange (#FF6A00) and cream (#FDFBF7).
+   =========================================================== */
+:root {
+  --brand: #ff6a00;
+  --brand-600: #e55a00;
+  --brand-100: #ffe6d3;
+  --cream: #fdfbf7;
+  --cream-200: #f7f3ea;
+  --ink: #0b0b0f;
+  --ink-600: #3a3a42;
+  --ink-400: #7c7c88;
+  --ink-200: #d5d5da;
+  --ring-brand: 0 0 0 4px rgba(255, 106, 0, 0.18);
+  --radius-lg: 16px;
+}
+
 html,
 body,
 :root {
@@ -9,14 +27,53 @@ body,
 }
 
 html {
-  background: #FDFBF7;
+  background: var(--cream);
+  scroll-behavior: smooth;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
 }
 
 body {
-  background: #FDFBF7;
-  color: #000000;
+  background: var(--cream);
+  color: var(--ink);
+  font-feature-settings: "ss01", "cv11";
 }
 
+::selection {
+  background: rgba(255, 106, 0, 0.22);
+  color: var(--ink);
+}
+
+/* Refined focus ring used across interactive elements */
+:where(button, a, input, select, textarea, [tabindex]):focus-visible {
+  outline: none;
+  box-shadow: var(--ring-brand);
+  border-radius: 10px;
+}
+
+/* Smooth, branded scrollbar (subtle) */
+* {
+  scrollbar-color: rgba(11, 11, 15, 0.22) transparent;
+  scrollbar-width: thin;
+}
+*::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+*::-webkit-scrollbar-thumb {
+  background: rgba(11, 11, 15, 0.18);
+  border-radius: 999px;
+  border: 2px solid transparent;
+  background-clip: padding-box;
+}
+*::-webkit-scrollbar-thumb:hover {
+  background: rgba(11, 11, 15, 0.32);
+  background-clip: padding-box;
+  border: 2px solid transparent;
+}
+
+/* Vendor overrides (keep) */
 .leaflet-bottom,
 .leaflet-control,
 .leaflet-pane,
@@ -31,4 +88,64 @@ body {
 .rdrCalendarWrapper {
   font-size: 16px !important;
   width: 100% !important;
+}
+
+/* ===========================================================
+   Reusable utility components (premium primitives)
+   =========================================================== */
+@layer components {
+  .btn {
+    @apply inline-flex items-center justify-center gap-2 font-semibold rounded-xl
+           transition-all duration-200 ease-out
+           focus-visible:outline-none disabled:opacity-50 disabled:cursor-not-allowed
+           select-none;
+  }
+  .btn-brand {
+    @apply btn bg-brand text-white shadow-soft hover:bg-brand-600 hover:shadow-glow active:scale-[0.98];
+  }
+  .btn-ink {
+    @apply btn bg-ink text-white hover:bg-ink-800 active:scale-[0.98];
+  }
+  .btn-outline {
+    @apply btn bg-white text-ink border border-ink-200 hover:border-ink hover:bg-cream-200 active:scale-[0.98];
+  }
+  .btn-ghost {
+    @apply btn bg-transparent text-ink hover:bg-ink/5 active:scale-[0.98];
+  }
+
+  .chip {
+    @apply inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold;
+  }
+
+  .card {
+    @apply bg-white rounded-2xl border border-ink-100 shadow-soft;
+  }
+
+  .input-base {
+    @apply w-full bg-white border border-ink-200 rounded-xl px-4 py-3 text-ink
+           placeholder:text-ink-400
+           transition-all duration-200
+           hover:border-ink-300
+           focus:border-brand focus:shadow-ring-brand focus:outline-none
+           disabled:opacity-60 disabled:cursor-not-allowed;
+  }
+
+  .hairline {
+    @apply border-t border-ink-100;
+  }
+
+  .section-heading {
+    @apply font-display text-3xl md:text-4xl font-semibold tracking-tighter2 text-ink;
+  }
+}
+
+/* Subtle grain overlay helper */
+.grain::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0.06 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  opacity: 0.6;
+  mix-blend-mode: multiply;
 }

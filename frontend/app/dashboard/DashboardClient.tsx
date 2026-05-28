@@ -5,25 +5,23 @@ import axios from "axios";
 import { useCallback, useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 
-import Heading from "@/app/components/Heading";
 import ListingCard from "@/app/components/listings/ListingCard";
-import Button from "@/app/components/Button";
 
 import getUserItems from "@/app/actions/getUserItems";
 import EmptyState from "@/app/components/EmptyState";
 import ClientOnly from "@/app/components/ClientOnly";
-import { useUser } from '@/app/providers/UserProvider';
-import { FaUser, FaEnvelope, FaPhone, FaBirthdayCake, FaVenusMars, FaUserTag, FaPlus, FaEdit, FaToggleOn, FaToggleOff, FaTrash, FaCalendarAlt, FaBox, FaChartLine, FaStar } from "react-icons/fa";
-import ReviewModal from '@/app/components/modals/ReviewModal';
+import { useUser } from "@/app/providers/UserProvider";
+import {
+  FiUser, FiMail, FiPhone, FiCalendar, FiPlus, FiEdit2, FiToggleRight,
+  FiToggleLeft, FiTrash2, FiPackage, FiBox, FiStar, FiArrowRight, FiTag,
+} from "react-icons/fi";
+import { cn } from "@/app/lib/cn";
+import ReviewModal from "@/app/components/modals/ReviewModal";
 
-interface DashboardClientProps {
-  // No props required for now
-}
-
-const DashboardClient: React.FC<DashboardClientProps> = () => {
+const DashboardClient: React.FC = () => {
   const router = useRouter();
   const { token, user: currentUser } = useUser();
-  const [deletingId, setDeletingId] = useState('');
+  const [deletingId, setDeletingId] = useState("");
   const [loading, setLoading] = useState(true);
   const [items, setItems] = useState<any[]>([]);
   const [reservations, setReservations] = useState<any[]>([]);
@@ -36,98 +34,47 @@ const DashboardClient: React.FC<DashboardClientProps> = () => {
 
   useEffect(() => {
     async function fetchData() {
-      console.log('Dashboard useEffect triggered');
-      console.log('Token exists:', !!token);
-      console.log('Current user:', currentUser);
-      
       if (!token || !currentUser) {
-        console.log('Missing token or currentUser, stopping fetch');
-        console.log('Token:', token ? 'Present' : 'Missing');
-        console.log('Current user:', currentUser ? 'Present' : 'Missing');
         setLoading(false);
         return;
       }
-      
-      // Validate token format
-      if (!token.startsWith('Bearer ') && !token.includes('.')) {
-        console.error('Invalid token format:', token);
+      if (!token.startsWith("Bearer ") && !token.includes(".")) {
         setLoading(false);
         return;
       }
-      
       setLoading(true);
-      
       const userEmail = currentUser.email || currentUser.emailId;
-      console.log('User email for fetching items:', userEmail);
-      console.log('Current user object:', JSON.stringify(currentUser, null, 2));
-      console.log('Available user fields:', {
-        email: currentUser.email,
-        emailId: currentUser.emailId,
-        username: currentUser.username,
-        firstName: currentUser.firstName,
-        lastName: currentUser.lastName
-      });
-      
       if (!userEmail) {
-        console.error('No email found for current user:', currentUser);
         setLoading(false);
         return;
       }
-      
       try {
-        console.log('About to call getUserItems with email:', userEmail);
         const userItems = await getUserItems(userEmail);
-        console.log('getUserItems returned:', userItems);
-        console.log('Number of items found:', userItems.length);
         setItems(userItems);
-        
-        // Fetch reservations with proper authorization header
-        console.log('Fetching reservations with token:', token ? 'Token exists' : 'No token');
-        const authToken = token.startsWith('Bearer ') ? token : `Bearer ${token}`;
-        const res = await fetch('/api/reservations', {
-          headers: {
-            'Authorization': authToken,
-            'Content-Type': 'application/json'
-          }
+
+        const authToken = token.startsWith("Bearer ") ? token : `Bearer ${token}`;
+        const res = await fetch("/api/reservations", {
+          headers: { Authorization: authToken, "Content-Type": "application/json" },
         });
-        
-        console.log('Reservations response status:', res.status);
         if (res.ok) {
-          const reservationsData = await res.json();
-          console.log('Reservations data:', reservationsData);
-          setReservations(reservationsData);
+          setReservations(await res.json());
           setReservationsError(null);
         } else {
-          const errorText = await res.text();
-          console.error('Failed to fetch reservations:', res.status, errorText);
           setReservations([]);
           setReservationsError(`Failed to load reservations (${res.status})`);
         }
-        
-        // Fetch orders with proper authorization header
-        console.log('Fetching orders with token:', token ? 'Token exists' : 'No token');
-        const ordersRes = await fetch('/api/orders', {
-          headers: {
-            'Authorization': authToken,
-            'Content-Type': 'application/json'
-          }
+
+        const ordersRes = await fetch("/api/orders", {
+          headers: { Authorization: authToken, "Content-Type": "application/json" },
         });
-        
-        console.log('Orders response status:', ordersRes.status);
         if (ordersRes.ok) {
-          const ordersData = await ordersRes.json();
-          console.log('Orders data:', ordersData);
-          setOrders(ordersData);
+          setOrders(await ordersRes.json());
           setOrdersError(null);
         } else {
-          const errorText = await ordersRes.text();
-          console.error('Failed to fetch orders:', ordersRes.status, errorText);
           setOrders([]);
           setOrdersError(`Failed to load orders (${ordersRes.status})`);
         }
       } catch (error) {
-        console.error('Error fetching data:', error);
-        // Keep items if they were successfully fetched, but clear reservations and orders on error
         setReservations([]);
         setOrders([]);
       } finally {
@@ -137,100 +84,88 @@ const DashboardClient: React.FC<DashboardClientProps> = () => {
     fetchData();
   }, [token, currentUser]);
 
-  const onDelete = useCallback((id: string) => {
-    setDeletingId(id);
-    axios.delete(`/api/items/${id}`, {
-      headers: {
-        'Authorization': `Bearer ${token || localStorage.getItem('authToken')}`
-      }
-    })
-      .then(() => {
-        toast.success('Item deleted successfully');
-        setItems(items.filter(item => item.id !== id));
-      })
-      .catch(() => {
-        toast.error('Something went wrong.')
-      })
-      .finally(() => {
-        setDeletingId('');
-      })
-  }, [items, token]);
+  const onDelete = useCallback(
+    (id: string) => {
+      setDeletingId(id);
+      axios
+        .delete(`/api/items/${id}`, {
+          headers: { Authorization: `Bearer ${token || localStorage.getItem("authToken")}` },
+        })
+        .then(() => {
+          toast.success("Item deleted");
+          setItems(items.filter((i) => i.id !== id));
+        })
+        .catch(() => toast.error("Something went wrong."))
+        .finally(() => setDeletingId(""));
+    },
+    [items, token]
+  );
 
-  const onEdit = useCallback((id: string) => {
-    router.push(`/dashboard/edit/${id}`);
-  }, [router]);
+  const onEdit = useCallback((id: string) => router.push(`/dashboard/edit/${id}`), [router]);
 
-  const onToggleAvailability = useCallback((id: string, currentStatus: boolean) => {
-    axios.put(`/api/items/${id}`, {
-      available: !currentStatus
-    }, {
-      headers: {
-        'Authorization': `Bearer ${token || localStorage.getItem('authToken')}`
-      }
-    })
-      .then(() => {
-        toast.success(`Item ${!currentStatus ? 'made available' : 'made unavailable'}`);
-        setItems(items.map(item => 
-          item.id === id ? { ...item, available: !currentStatus } : item
-        ));
-      })
-      .catch(() => {
-        toast.error('Something went wrong.')
-      })
-  }, [items, token]);
+  const onToggleAvailability = useCallback(
+    (id: string, currentStatus: boolean) => {
+      axios
+        .put(
+          `/api/items/${id}`,
+          { available: !currentStatus },
+          { headers: { Authorization: `Bearer ${token || localStorage.getItem("authToken")}` } }
+        )
+        .then(() => {
+          toast.success(`Item ${!currentStatus ? "enabled" : "disabled"}`);
+          setItems(items.map((i) => (i.id === id ? { ...i, available: !currentStatus } : i)));
+        })
+        .catch(() => toast.error("Something went wrong."));
+    },
+    [items, token]
+  );
 
-  const onAddReview = useCallback(async (order: any) => {
-    try {
-      // Get the first item ID from the order
-      const itemId = order.itemIds && order.itemIds.length > 0 ? order.itemIds[0] : null;
-      
-      if (!itemId) {
-        toast.error('No item found in this order');
-        return;
-      }
-
-      // Check if user has already reviewed this item
-      const userEmail = currentUser?.email || currentUser?.emailId;
-      if (userEmail) {
-        try {
-          const checkResponse = await axios.get(`/api/reviews/check/${itemId}/${userEmail}`);
-          if (checkResponse.data.hasReviewed) {
-            toast.error('You have already reviewed this item');
-            return;
+  const onAddReview = useCallback(
+    async (order: any) => {
+      try {
+        const itemId = order.itemIds && order.itemIds.length > 0 ? order.itemIds[0] : null;
+        if (!itemId) {
+          toast.error("No item found in this order");
+          return;
+        }
+        const userEmail = currentUser?.email || currentUser?.emailId;
+        if (userEmail) {
+          try {
+            const checkResponse = await axios.get(`/api/reviews/check/${itemId}/${userEmail}`);
+            if (checkResponse.data.hasReviewed) {
+              toast.error("You have already reviewed this item");
+              return;
+            }
+          } catch {
+            // best-effort
           }
-        } catch (error) {
-          console.warn('Could not check for existing review:', error);
-          // Continue with review submission even if check fails
         }
-      }
-
-      // Fetch item details
-      const response = await axios.get(`/api/items/${itemId}/details`, {
-        headers: {
-          'Authorization': `Bearer ${token || localStorage.getItem('authToken')}`
+        const response = await axios.get(`/api/items/${itemId}/details`, {
+          headers: { Authorization: `Bearer ${token || localStorage.getItem("authToken")}` },
+        });
+        if (response.data) {
+          setSelectedItem(response.data);
+          setSelectedOrder(order);
+          setIsReviewModalOpen(true);
+        } else {
+          toast.error("Failed to fetch item details");
         }
-      });
-
-      if (response.data) {
-        setSelectedItem(response.data);
-        setSelectedOrder(order);
-        setIsReviewModalOpen(true);
-      } else {
-        toast.error('Failed to fetch item details');
+      } catch {
+        toast.error("Failed to fetch item details");
       }
-    } catch (error) {
-      console.error('Error fetching item details:', error);
-      toast.error('Failed to fetch item details');
-    }
-  }, [token, currentUser]);
+    },
+    [token, currentUser]
+  );
 
   if (loading) {
     return (
-      <div className="py-20 min-h-screen bg-[#FDFBF7] flex items-center justify-center">
+      <div className="min-h-[70vh] flex items-center justify-center" data-testid="dashboard-loading">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-16 w-16 border-b-2 border-alibaba-orange mx-auto mb-4"></div>
-          <p className="text-xl font-semibold text-alibaba-black">Loading your dashboard...</p>
-          <p className="text-alibaba-gray-600 mt-2">Fetching your latest data</p>
+          <div className="relative mx-auto h-12 w-12">
+            <div className="absolute inset-0 rounded-full border-2 border-ink-100" />
+            <div className="absolute inset-0 rounded-full border-2 border-transparent border-t-brand animate-spin" />
+          </div>
+          <p className="mt-4 text-sm font-medium text-ink-600">Loading your dashboard…</p>
         </div>
       </div>
     );
@@ -238,360 +173,217 @@ const DashboardClient: React.FC<DashboardClientProps> = () => {
 
   if (!currentUser) {
     return (
-      <div className="min-h-screen bg-[#FDFBF7]">
-        <ClientOnly>
-          <EmptyState title="Unauthorized" subtitle="Please login to access your dashboard" />
-        </ClientOnly>
-      </div>
+      <ClientOnly>
+        <EmptyState title="Unauthorized" subtitle="Please log in to access your dashboard." />
+      </ClientOnly>
     );
   }
 
   return (
-    <div className="min-h-screen bg-[#FDFBF7]">
-      {/* Header Section */}
-      <div className="bg-alibaba-gray-50 shadow-sm border-b border-alibaba-gray-200">
-        <div className="max-w-7xl mx-auto px-6 py-8">
-          <div className="flex items-center justify-between">
+    <div className="min-h-screen bg-cream" data-testid="dashboard-page">
+      {/* Header */}
+      <section className="relative border-b border-ink-100 bg-white">
+        <div className="absolute inset-0 bg-radial-brand opacity-60" />
+        <div className="relative max-w-7xl mx-auto px-6 md:px-10 py-10">
+          <div className="flex flex-col md:flex-row md:items-end md:justify-between gap-6">
             <div>
-              <h1 className="text-3xl font-bold text-alibaba-black">
-                Welcome back, {currentUser?.firstName || currentUser?.name || 'User'}!
+              <p className="text-xs font-semibold uppercase tracking-[0.18em] text-brand mb-2">
+                Dashboard
+              </p>
+              <h1 className="font-display font-semibold text-3xl md:text-4xl tracking-tighter2 text-ink">
+                Welcome back, {currentUser?.firstName || currentUser?.name || "friend"} 👋
               </h1>
-              <p className="text-alibaba-gray-600 mt-2">Manage your profile, listings, and bookings from here</p>
+              <p className="mt-2 text-ink-500 max-w-xl">
+                Manage your profile, listings, bookings and orders — all in one place.
+              </p>
             </div>
-            <div className="hidden md:flex items-center space-x-4">
-              <div className="text-center px-4 py-2 bg-alibaba-orange/10 rounded-lg">
-                <div className="text-2xl font-bold text-alibaba-orange">{items.length}</div>
-                <div className="text-sm text-alibaba-gray-600">Listed Items</div>
-              </div>
-              <div className="text-center px-4 py-2 bg-alibaba-gray-100 rounded-lg">
-                <div className="text-2xl font-bold text-alibaba-black">{orders.length}</div>
-                <div className="text-sm text-alibaba-gray-600">Orders</div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
 
-      <div className="max-w-7xl mx-auto px-6 py-8 space-y-8">
-        {/* User Profile Section */}
-        <div className="bg-white rounded-2xl shadow-xl overflow-hidden transform hover:scale-[1.01] transition-transform duration-300">
-          <div className="bg-gradient-to-r from-alibaba-orange to-orange-600 px-8 py-6">
-            <div className="flex items-center space-x-4">
-              <div className="w-16 h-16 bg-white/20 rounded-full flex items-center justify-center">
-                <FaUser className="text-2xl text-white" />
-              </div>
-              <div>
-                <h2 className="text-2xl font-bold text-white">Profile Information</h2>
-                <p className="text-orange-100">Your account details and settings</p>
-              </div>
-            </div>
-          </div>
-          
-          <div className="p-8">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-              <div className="space-y-6">
-                <div className="flex items-center space-x-3 p-4 bg-gray-50 rounded-xl hover:bg-gray-100 transition-colors">
-                  <FaUser className="text-alibaba-orange text-lg" />
-                  <div className="flex-1">
-                    <label className="block text-sm font-semibold text-gray-700">Full Name</label>
-                    <div className="text-gray-900 text-lg">
-                      {currentUser?.firstName && currentUser?.lastName 
-                        ? `${currentUser.firstName} ${currentUser.lastName}`
-                        : currentUser?.name || 'Not provided'
-                      }
-                    </div>
-                  </div>
-                </div>
-                
-                <div className="flex items-center space-x-3 p-4 bg-gray-50 rounded-xl hover:bg-gray-100 transition-colors">
-                  <FaUserTag className="text-alibaba-orange text-lg" />
-                  <div className="flex-1">
-                    <label className="block text-sm font-semibold text-gray-700">Username</label>
-                    <div className="text-gray-900 text-lg">{currentUser?.username || 'Not provided'}</div>
-                  </div>
-                </div>
-                
-                <div className="flex items-center space-x-3 p-4 bg-gray-50 rounded-xl hover:bg-gray-100 transition-colors">
-                  <FaEnvelope className="text-alibaba-orange text-lg" />
-                  <div className="flex-1">
-                    <label className="block text-sm font-semibold text-gray-700">Email</label>
-                    <div className="text-gray-900 text-lg">{currentUser?.email || currentUser?.emailId || 'Not provided'}</div>
-                  </div>
-                </div>
-              </div>
-              
-              <div className="space-y-6">
-                <div className="flex items-center space-x-3 p-4 bg-gray-50 rounded-xl hover:bg-gray-100 transition-colors">
-                  <FaPhone className="text-alibaba-orange text-lg" />
-                  <div className="flex-1">
-                    <label className="block text-sm font-semibold text-gray-700">Phone Number</label>
-                    <div className="text-gray-900 text-lg">{currentUser?.phoneNumber || 'Not provided'}</div>
-                  </div>
-                </div>
-                
-                <div className="flex items-center space-x-3 p-4 bg-gray-50 rounded-xl hover:bg-gray-100 transition-colors">
-                  <FaVenusMars className="text-alibaba-orange text-lg" />
-                  <div className="flex-1">
-                    <label className="block text-sm font-semibold text-gray-700">Gender</label>
-                    <div className="text-gray-900 text-lg">{currentUser?.gender || 'Not provided'}</div>
-                  </div>
-                </div>
-                
-                <div className="flex items-center space-x-3 p-4 bg-gray-50 rounded-xl hover:bg-gray-100 transition-colors">
-                  <FaBirthdayCake className="text-alibaba-orange text-lg" />
-                  <div className="flex-1">
-                    <label className="block text-sm font-semibold text-gray-700">Date of Birth</label>
-                    <div className="text-gray-900 text-lg">{currentUser?.dateOfBirth || 'Not provided'}</div>
-                  </div>
-                </div>
-              </div>
+            <div className="flex items-center gap-3">
+              <Stat label="Listed items" value={items.length} accent />
+              <Stat label="Orders" value={orders.length} />
+              <Stat label="Bookings" value={reservations.length} />
             </div>
           </div>
         </div>
+      </section>
 
-        {/* My Listed Items */}
-        <div className="bg-white rounded-2xl shadow-xl overflow-hidden transform hover:scale-[1.01] transition-transform duration-300">
-          <div className="bg-gradient-to-r from-green-600 to-emerald-600 px-8 py-6">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center space-x-4">
-                <div className="w-16 h-16 bg-white/20 rounded-full flex items-center justify-center">
-                  <FaBox className="text-2xl text-white" />
-                </div>
-                <div>
-                  <h2 className="text-2xl font-bold text-white">My Listed Items</h2>
-                  <p className="text-green-100">
-                    You have {items.length} item{items.length !== 1 ? 's' : ''} listed for sale/rent
-                  </p>
-                </div>
-              </div>
-              <button
-                onClick={() => router.push('/rent')}
-                className="bg-white/20 hover:bg-white/30 text-white px-6 py-3 rounded-xl font-semibold flex items-center space-x-2 transition-all duration-200 hover:scale-105"
-              >
-                <FaPlus className="text-lg" />
-                <span>Add New Item</span>
-              </button>
-            </div>
+      <div className="max-w-7xl mx-auto px-6 md:px-10 py-10 space-y-10">
+        {/* Profile */}
+        <SectionCard
+          eyebrow="Account"
+          title="Profile information"
+          icon={<FiUser />}
+        >
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+            <ProfileRow icon={<FiUser />} label="Full name" value={
+              currentUser?.firstName && currentUser?.lastName
+                ? `${currentUser.firstName} ${currentUser.lastName}`
+                : currentUser?.name || "—"
+            } />
+            <ProfileRow icon={<FiTag />} label="Username" value={currentUser?.username || "—"} />
+            <ProfileRow icon={<FiMail />} label="Email" value={currentUser?.email || currentUser?.emailId || "—"} />
+            <ProfileRow icon={<FiPhone />} label="Phone" value={currentUser?.phoneNumber || "—"} />
+            <ProfileRow icon={<FiUser />} label="Gender" value={currentUser?.gender || "—"} />
+            <ProfileRow icon={<FiCalendar />} label="Date of birth" value={currentUser?.dateOfBirth || "—"} />
           </div>
-          
-          <div className="p-8">
-            {items.length === 0 ? (
-              <div className="text-center py-12">
-                <div className="w-24 h-24 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-6">
-                  <FaBox className="text-3xl text-gray-400" />
-                </div>
-                <h3 className="text-xl font-semibold text-gray-700 mb-2">No items listed yet</h3>
-                <p className="text-gray-500 mb-6">Start earning by listing your first item for rent or sale</p>
-                <button
-                  onClick={() => router.push('/rent')}
-                  className="bg-gradient-to-r from-green-600 to-emerald-600 text-white px-8 py-3 rounded-xl font-semibold hover:shadow-lg transition-all duration-200 hover:scale-105"
-                >
-                  List Your First Item
-                </button>
-              </div>
-            ) : (
-              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
-                {items.map((item: any) => (
-                  <div key={item.id} className="relative group">
-                    <div className="transform group-hover:scale-105 transition-transform duration-200">
-                      <ListingCard
-                        data={item}
-                        currentUser={currentUser as any}
-                      />
-                    </div>
-                    
-                    {/* Action Buttons Overlay */}
-                    <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity duration-200 rounded-xl flex items-center justify-center">
-                      <div className="flex flex-col gap-2 p-4">
-                        <button
-                          onClick={() => onEdit(item.id)}
-                          className="bg-white text-alibaba-black px-4 py-3 rounded-lg font-semibold flex items-center space-x-2 hover:bg-alibaba-gray-100 hover:shadow-lg transform hover:scale-105 transition-all duration-200 border-2 border-alibaba-gray-200"
-                        >
-                          <FaEdit />
-                          <span>Edit</span>
-                        </button>
-                        <button
-                          onClick={() => onToggleAvailability(item.id, item.available)}
-                          className={`px-4 py-3 rounded-lg font-semibold flex items-center space-x-2 transition-all duration-200 hover:shadow-lg transform hover:scale-105 border-2 ${
-                            item.available 
-                              ? 'bg-alibaba-orange hover:bg-alibaba-orange-dark text-white border-alibaba-orange hover:border-alibaba-orange-dark' 
-                              : 'bg-green-500 hover:bg-green-600 text-white border-green-500 hover:border-green-600'
-                          }`}
-                        >
-                          {item.available ? <FaToggleOff /> : <FaToggleOn />}
-                          <span>{item.available ? "Disable" : "Enable"}</span>
-                        </button>
-                        <button
-                          onClick={() => onDelete(item.id)}
-                          disabled={deletingId === item.id}
-                          className="bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded-lg font-semibold flex items-center space-x-2 transition-colors disabled:opacity-50"
-                        >
-                          <FaTrash />
-                          <span>{deletingId === item.id ? 'Deleting...' : 'Delete'}</span>
-                        </button>
-                      </div>
-                    </div>
-                    
-                    {/* Status Badges */}
-                    <div className="absolute top-3 right-3 flex flex-col gap-2">
-                      <div className={`
-                        px-3 py-1 rounded-full text-xs font-bold shadow-lg
-                        ${item.available 
-                          ? 'bg-green-500 text-white' 
-                          : 'bg-red-500 text-white'
-                        }
-                      `}>
-                        {item.available ? 'Available' : 'Unavailable'}
-                      </div>
-                      <div className="px-3 py-1 rounded-full text-xs font-bold bg-blue-500 text-white shadow-lg">
-                        {item.type || 'RENT'}
-                      </div>
-                      <div className="px-3 py-1 rounded-full text-xs font-bold bg-orange-500 text-white shadow-lg">
-                        Qty: {item.quantity || 1}
-                      </div>
+        </SectionCard>
+
+        {/* Listed Items */}
+        <SectionCard
+          eyebrow="Listings"
+          title="My listed items"
+          subtitle={`${items.length} item${items.length !== 1 ? "s" : ""} you're renting out`}
+          icon={<FiBox />}
+          action={
+            <button
+              onClick={() => router.push("/rent")}
+              className="inline-flex items-center gap-2 px-4 py-2.5 rounded-full bg-brand text-white text-sm font-semibold hover:bg-brand-600 hover:shadow-glow transition-all"
+              data-testid="dashboard-add-item"
+            >
+              <FiPlus size={16} /> Add new item
+            </button>
+          }
+        >
+          {items.length === 0 ? (
+            <EmptyBlock
+              icon={<FiBox size={22} />}
+              title="No items listed yet"
+              copy="Start earning by listing your first item."
+              ctaLabel="List your first item"
+              onClick={() => router.push("/rent")}
+            />
+          ) : (
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-5">
+              {items.map((item: any) => (
+                <div key={item.id} className="group relative" data-testid={`dashboard-item-${item.id}`}>
+                  <ListingCard data={item} currentUser={currentUser as any} />
+
+                  {/* Hover actions overlay */}
+                  <div className="pointer-events-none absolute inset-x-0 top-0 aspect-[4/5] rounded-2xl overflow-hidden">
+                    <div className="absolute inset-0 bg-ink/60 opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-auto flex flex-col items-center justify-center gap-2 p-3">
+                      <button onClick={() => onEdit(item.id)} className="w-full inline-flex items-center justify-center gap-2 h-10 rounded-full bg-white text-ink text-sm font-semibold hover:bg-cream-200">
+                        <FiEdit2 size={14} /> Edit
+                      </button>
+                      <button
+                        onClick={() => onToggleAvailability(item.id, item.available)}
+                        className={cn(
+                          "w-full inline-flex items-center justify-center gap-2 h-10 rounded-full text-sm font-semibold",
+                          item.available ? "bg-brand text-white hover:bg-brand-600" : "bg-emerald-500 text-white hover:bg-emerald-600"
+                        )}
+                      >
+                        {item.available ? <FiToggleLeft size={14} /> : <FiToggleRight size={14} />}
+                        {item.available ? "Disable" : "Enable"}
+                      </button>
+                      <button
+                        onClick={() => onDelete(item.id)}
+                        disabled={deletingId === item.id}
+                        className="w-full inline-flex items-center justify-center gap-2 h-10 rounded-full bg-red-500 hover:bg-red-600 text-white text-sm font-semibold disabled:opacity-60"
+                      >
+                        <FiTrash2 size={14} />
+                        {deletingId === item.id ? "Deleting…" : "Delete"}
+                      </button>
                     </div>
                   </div>
-                ))}
-              </div>
-            )}
-          </div>
-        </div>
+
+                  {/* Status chips */}
+                  <div className="absolute top-3 right-3 flex flex-col gap-1.5">
+                    <span className={cn(
+                      "inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider",
+                      item.available ? "bg-emerald-500/95 text-white" : "bg-red-500/95 text-white"
+                    )}>
+                      {item.available ? "Available" : "Hidden"}
+                    </span>
+                    <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider bg-ink/85 text-white">
+                      Qty {item.quantity || 1}
+                    </span>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </SectionCard>
 
         {/* Rental Bookings */}
-        <div className="bg-white rounded-2xl shadow-xl overflow-hidden transform hover:scale-[1.01] transition-transform duration-300">
-          <div className="bg-gradient-to-r from-blue-600 to-indigo-600 px-8 py-6">
-            <div className="flex items-center space-x-4">
-              <div className="w-16 h-16 bg-white/20 rounded-full flex items-center justify-center">
-                <FaCalendarAlt className="text-2xl text-white" />
-              </div>
-              <div>
-                <h2 className="text-2xl font-bold text-white">Rental Bookings</h2>
-                <p className="text-blue-100">
-                  {reservations.length} booking{reservations.length !== 1 ? 's' : ''} on your items
-                </p>
-              </div>
-            </div>
-          </div>
-          
-          <div className="p-8">
-            {reservationsError ? (
-              <div className="text-center py-12">
-                <div className="w-24 h-24 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-6">
-                  <FaCalendarAlt className="text-3xl text-red-400" />
-                </div>
-                <h3 className="text-xl font-semibold text-red-700 mb-2">Error loading bookings</h3>
-                <p className="text-red-500 mb-2">{reservationsError}</p>
-                <p className="text-sm text-gray-400">Please try refreshing the page</p>
-              </div>
-            ) : reservations.length === 0 ? (
-              <div className="text-center py-12">
-                <div className="w-24 h-24 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-6">
-                  <FaCalendarAlt className="text-3xl text-gray-400" />
-                </div>
-                <h3 className="text-xl font-semibold text-gray-700 mb-2">No bookings yet</h3>
-                <p className="text-gray-500 mb-2">When someone books your items, they will appear here.</p>
-                <p className="text-sm text-gray-400">Make sure your items are available and attractively priced!</p>
-              </div>
-            ) : (
-              <div className="space-y-4">
-                {reservations.map((reservation: any, index: number) => (
-                  <div key={index} className="border-2 border-gray-100 hover:border-blue-200 rounded-xl p-6 transition-colors hover:bg-blue-50">
-                    <div className="flex items-center justify-between">
-                      <div>
-                        <h4 className="font-semibold text-gray-800">Booking #{index + 1}</h4>
-                        <p className="text-gray-600 mt-1">Details will be available soon</p>
-                      </div>
-                      <div className="text-right">
-                        <div className="text-sm text-gray-500">Status</div>
-                        <div className="font-semibold text-blue-600">Pending Setup</div>
-                      </div>
-                    </div>
+        <SectionCard
+          eyebrow="Incoming"
+          title="Rental bookings"
+          subtitle={`${reservations.length} booking${reservations.length !== 1 ? "s" : ""} on your items`}
+          icon={<FiCalendar />}
+        >
+          {reservationsError ? (
+            <ErrorBlock title="Error loading bookings" detail={reservationsError} />
+          ) : reservations.length === 0 ? (
+            <EmptyBlock icon={<FiCalendar size={22} />} title="No bookings yet" copy="When someone books your items, you'll see them here." />
+          ) : (
+            <div className="space-y-3">
+              {reservations.map((r: any, i: number) => (
+                <div key={i} className="flex items-center justify-between rounded-2xl border border-ink-100 hover:border-ink-200 bg-white p-5 transition-colors">
+                  <div>
+                    <h4 className="font-display font-semibold text-ink">Booking #{i + 1}</h4>
+                    <p className="text-sm text-ink-500 mt-0.5">Details available soon</p>
                   </div>
-                ))}
-              </div>
-            )}
-          </div>
-        </div>
+                  <span className="chip bg-amber-100 text-amber-800 border border-amber-200">Pending</span>
+                </div>
+              ))}
+            </div>
+          )}
+        </SectionCard>
 
         {/* My Orders */}
-        <div className="bg-white rounded-2xl shadow-xl overflow-hidden transform hover:scale-[1.01] transition-transform duration-300">
-          <div className="bg-gradient-to-r from-purple-600 to-pink-600 px-8 py-6">
-            <div className="flex items-center space-x-4">
-              <div className="w-16 h-16 bg-white/20 rounded-full flex items-center justify-center">
-                <FaBox className="text-2xl text-white" />
-              </div>
-              <div>
-                <h2 className="text-2xl font-bold text-white">My Orders</h2>
-                <p className="text-purple-100">
-                  {orders.length} order{orders.length !== 1 ? 's' : ''} placed
-                </p>
-              </div>
-            </div>
-          </div>
-          
-          <div className="p-8">
-            {ordersError ? (
-              <div className="text-center py-12">
-                <div className="w-24 h-24 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-6">
-                  <FaBox className="text-3xl text-red-400" />
-                </div>
-                <h3 className="text-xl font-semibold text-red-700 mb-2">Error loading orders</h3>
-                <p className="text-red-500 mb-2">{ordersError}</p>
-                <p className="text-sm text-gray-400">Please try refreshing the page</p>
-              </div>
-            ) : orders.length === 0 ? (
-              <div className="text-center py-12">
-                <div className="w-24 h-24 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-6">
-                  <FaBox className="text-3xl text-gray-400" />
-                </div>
-                <h3 className="text-xl font-semibold text-gray-700 mb-2">No orders yet</h3>
-                <p className="text-gray-500 mb-2">When you place orders, they will appear here.</p>
-                <p className="text-sm text-gray-400">Start shopping to see your order history!</p>
-              </div>
-            ) : (
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                {orders.map((order: any) => (
-                  <div key={order.id} className="border-2 border-gray-100 hover:border-purple-200 rounded-xl p-6 transition-colors hover:bg-purple-50">
-                    <div className="space-y-3">
-                      <div className="flex items-center justify-between">
-                        <h4 className="font-semibold text-gray-800">Order #{order.orderId}</h4>
-                        <div className={`px-2 py-1 rounded-full text-xs font-bold ${
-                          order.status === 'PLACED' ? 'bg-orange-100 text-orange-800' :
-                          order.status === 'DELIVERED' ? 'bg-green-100 text-green-800' :
-                          order.status === 'CANCELLED' ? 'bg-red-100 text-red-800' :
-                          'bg-yellow-100 text-yellow-800'
-                        }`}>
-                          {order.status}
-                        </div>
-                      </div>
-                      <div className="text-sm text-gray-600">
-                        <p>Amount: ₹{order.totalAmount}</p>
-                        <p>Payment: <span className={`font-semibold ${
-                          order.paymentStatus === 'PAID' ? 'text-green-600' : 'text-red-600'
-                        }`}>{order.paymentStatus}</span></p>
-                        {order.transactionId && (
-                          <p className="text-xs text-gray-500">Txn: {order.transactionId.substring(0, 8)}...</p>
-                        )}
-                      </div>
-                      <div className="flex space-x-2">
-                        <button
-                          onClick={() => onAddReview(order)}
-                          className="bg-orange-600 hover:bg-orange-700 text-white px-3 py-1 rounded-lg text-sm font-semibold transition-colors flex items-center gap-1"
-                        >
-                          <FaStar size={12} />
-                          Add Review
-                        </button>
-                      </div>
+        <SectionCard
+          eyebrow="Activity"
+          title="My orders"
+          subtitle={`${orders.length} order${orders.length !== 1 ? "s" : ""} placed`}
+          icon={<FiPackage />}
+        >
+          {ordersError ? (
+            <ErrorBlock title="Error loading orders" detail={ordersError} />
+          ) : orders.length === 0 ? (
+            <EmptyBlock icon={<FiPackage size={22} />} title="No orders yet" copy="Start renting and your order history will appear here." />
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+              {orders.map((order: any) => (
+                <div key={order.id} className="rounded-2xl border border-ink-100 hover:border-ink-200 bg-white p-5 transition-colors" data-testid={`order-${order.orderId}`}>
+                  <div className="flex items-start justify-between">
+                    <div>
+                      <p className="text-[11px] font-semibold uppercase tracking-wider text-ink-400">Order</p>
+                      <p className="font-display font-semibold text-ink">#{order.orderId}</p>
                     </div>
+                    <OrderStatus status={order.status} />
                   </div>
-                ))}
-              </div>
-            )}
-          </div>
-        </div>
+
+                  <div className="mt-4 space-y-1 text-sm">
+                    <div className="flex justify-between text-ink-600">
+                      <span>Amount</span>
+                      <span className="font-semibold text-ink">₹{order.totalAmount}</span>
+                    </div>
+                    <div className="flex justify-between text-ink-600">
+                      <span>Payment</span>
+                      <span className={cn("font-semibold", order.paymentStatus === "PAID" ? "text-emerald-600" : "text-red-600")}>
+                        {order.paymentStatus}
+                      </span>
+                    </div>
+                    {order.transactionId && (
+                      <div className="flex justify-between text-ink-500">
+                        <span>Txn</span>
+                        <span className="font-mono text-xs">{order.transactionId.substring(0, 10)}…</span>
+                      </div>
+                    )}
+                  </div>
+
+                  <button
+                    onClick={() => onAddReview(order)}
+                    className="mt-4 w-full inline-flex items-center justify-center gap-2 h-9 rounded-full bg-cream-200 hover:bg-ink hover:text-white text-ink text-sm font-semibold transition-all"
+                  >
+                    <FiStar size={14} /> Add review
+                  </button>
+                </div>
+              ))}
+            </div>
+          )}
+        </SectionCard>
       </div>
-      
-      {/* Review Modal */}
+
       {selectedItem && selectedOrder && (
         <ReviewModal
           isOpen={isReviewModalOpen}
@@ -605,7 +397,7 @@ const DashboardClient: React.FC<DashboardClientProps> = () => {
           orderId={selectedOrder.orderId || selectedOrder.id}
           currentUser={currentUser}
           onReviewSubmitted={() => {
-            toast.success('Review submitted successfully!');
+            toast.success("Review submitted!");
             setIsReviewModalOpen(false);
             setSelectedItem(null);
             setSelectedOrder(null);
@@ -616,4 +408,116 @@ const DashboardClient: React.FC<DashboardClientProps> = () => {
   );
 };
 
-export default DashboardClient; 
+/* ---------------- Small inline components ---------------- */
+
+const Stat: React.FC<{ label: string; value: number | string; accent?: boolean }> = ({
+  label, value, accent,
+}) => (
+  <div
+    className={cn(
+      "rounded-2xl border px-4 py-3 min-w-[110px]",
+      accent ? "bg-brand/10 border-brand/20" : "bg-white border-ink-100"
+    )}
+  >
+    <div className={cn("font-display font-bold text-2xl", accent ? "text-brand" : "text-ink")}>
+      {value}
+    </div>
+    <div className="text-[11px] uppercase tracking-wider text-ink-500 mt-0.5">{label}</div>
+  </div>
+);
+
+const SectionCard: React.FC<{
+  eyebrow: string;
+  title: string;
+  subtitle?: string;
+  icon: React.ReactNode;
+  action?: React.ReactNode;
+  children: React.ReactNode;
+}> = ({ eyebrow, title, subtitle, icon, action, children }) => (
+  <section className="rounded-3xl bg-white border border-ink-100 shadow-soft overflow-hidden">
+    <header className="flex flex-col md:flex-row md:items-end md:justify-between gap-4 p-6 md:p-8 border-b border-ink-100">
+      <div className="flex items-start gap-4">
+        <span className="inline-flex h-11 w-11 items-center justify-center rounded-xl bg-cream-200 text-brand">
+          {icon}
+        </span>
+        <div>
+          <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-brand">
+            {eyebrow}
+          </p>
+          <h2 className="font-display font-semibold text-xl md:text-2xl tracking-tighter2 text-ink mt-1">
+            {title}
+          </h2>
+          {subtitle && <p className="text-sm text-ink-500 mt-1">{subtitle}</p>}
+        </div>
+      </div>
+      {action}
+    </header>
+    <div className="p-6 md:p-8">{children}</div>
+  </section>
+);
+
+const ProfileRow: React.FC<{ icon: React.ReactNode; label: string; value: string }> = ({
+  icon, label, value,
+}) => (
+  <div className="flex items-center gap-3 px-4 py-3 rounded-xl bg-cream-100/70 border border-ink-100">
+    <span className="inline-flex h-9 w-9 items-center justify-center rounded-lg bg-white border border-ink-100 text-brand">
+      {icon}
+    </span>
+    <div className="min-w-0">
+      <p className="text-[10px] font-semibold uppercase tracking-wider text-ink-400">
+        {label}
+      </p>
+      <p className="text-sm text-ink font-medium truncate">{value}</p>
+    </div>
+  </div>
+);
+
+const EmptyBlock: React.FC<{
+  icon: React.ReactNode;
+  title: string;
+  copy: string;
+  ctaLabel?: string;
+  onClick?: () => void;
+}> = ({ icon, title, copy, ctaLabel, onClick }) => (
+  <div className="text-center py-10">
+    <div className="mx-auto inline-flex h-14 w-14 items-center justify-center rounded-2xl bg-cream-200 text-ink-400">
+      {icon}
+    </div>
+    <h3 className="mt-5 font-display font-semibold text-ink text-lg">{title}</h3>
+    <p className="mt-1 text-sm text-ink-500">{copy}</p>
+    {ctaLabel && onClick && (
+      <button
+        onClick={onClick}
+        className="mt-5 inline-flex items-center gap-2 px-5 py-2.5 rounded-full bg-brand text-white text-sm font-semibold hover:bg-brand-600 hover:shadow-glow transition-all"
+      >
+        {ctaLabel} <FiArrowRight size={14} />
+      </button>
+    )}
+  </div>
+);
+
+const ErrorBlock: React.FC<{ title: string; detail: string }> = ({ title, detail }) => (
+  <div className="text-center py-10">
+    <div className="mx-auto inline-flex h-14 w-14 items-center justify-center rounded-2xl bg-red-50 text-red-500">
+      !
+    </div>
+    <h3 className="mt-5 font-display font-semibold text-ink text-lg">{title}</h3>
+    <p className="mt-1 text-sm text-red-500">{detail}</p>
+    <p className="text-xs text-ink-400 mt-1">Please refresh the page.</p>
+  </div>
+);
+
+const OrderStatus: React.FC<{ status?: string }> = ({ status }) => {
+  const map: Record<string, string> = {
+    PLACED: "bg-amber-100 text-amber-800 border border-amber-200",
+    DELIVERED: "bg-emerald-100 text-emerald-800 border border-emerald-200",
+    CANCELLED: "bg-red-100 text-red-800 border border-red-200",
+  };
+  return (
+    <span className={cn("chip", map[status || ""] || "bg-ink-100 text-ink-700 border border-ink-200")}>
+      {status || "Pending"}
+    </span>
+  );
+};
+
+export default DashboardClient;
